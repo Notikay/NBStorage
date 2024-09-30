@@ -1,0 +1,56 @@
+[build-system]
+requires = ["setuptools >= 61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "NBStorage"
+version = "0.0.1"
+dependencies = [""]
+requires-python = ">=3.12"
+authors = [
+    {name = "Бобошко Антон", email = "anton.bobbis@gmail.com"}
+]
+maintainers = [
+    {name = "Бобошко Антон", email = "anton.bobbis@gmail.com"}
+]
+description = "Менеджер паролей"
+readme = "README.md"
+license = {file = "LICENSE"}
+keywords = [
+    "NBStorage",
+    "nb",
+    "notibit",
+    "storage",
+    "manager",
+    "password"
+]
+classifiers = [
+  "Development Status :: 1 - Planning",
+  "Intended Audience :: Regular Users",
+  "Programming Language :: Python :: 3.12",
+  "Operating System :: Windows 10"
+]
+
+[project.urls]
+Homepage = "https://github.com/Notikay/NBStorage"
+Documentation = "https://github.com/Notikay/NBStorage/tree/master/docs/"
+Repository = "https://github.com/Notikay/NBStorage.git"
+"Bug Tracker" = "https://github.com/Notikay/NBStorage/issues"
+Changelog = "https://github.com/Notikay/NBStorage/tree/master/CHANGELOG.md"
+
+# Зависимости для разработки
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "black",
+    "isort",
+    "mypy"
+]
+[project.scripts]
+cli = [
+  "rich",
+  "click",
+]
+
+[project.gui-scripts]
+gui = [""]
