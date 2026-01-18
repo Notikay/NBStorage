@@ -7,7 +7,7 @@ from functools import partial
 from math import ceil
 from typing import TYPE_CHECKING, TypedDict
 
-from ..interfaces import AbstractData, AbstractCardData
+from ..interfaces import AbstractData, AbstractCard
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -41,10 +41,12 @@ class MetaData(AbstractData):
 
     __card_id: uuid.UUID = field(init=False)
     __key: bytes = field(
-        default=secrets.token_bytes(32),
+        default_factory=lambda: secrets.token_bytes(32),
         init=False,
         repr=False
     )
+
+    ICON_EXTS = {'.png', '.jpg', '.jpeg', '.webp', '.svg', '.ico', '.icon'}
 
     @property
     def title(self) -> str:
@@ -89,9 +91,9 @@ class MetaData(AbstractData):
         """
         if not self._title:
             raise ValueError("Заголовок карточки не должен быть пустым!")
-        elif not self._icon_path.is_file():
-            raise FileNotFoundError("Иконка карточки пользователя не найдена "
-                                    f"по пути: {self._icon_path}")
+        elif self._icon_path.suffix.lower() not in self.ICON_EXTS:
+            raise ValueError("Иконка карточки пользователя имеет "
+                             "неподдерживаемый формат!")
         elif not self._user_login:
             raise ValueError("Логин пользователя не должен быть пустым!")
 
@@ -99,7 +101,7 @@ class MetaData(AbstractData):
 
 
 @dataclass(slots=True)
-class CardData(AbstractCardData):
+class Card(AbstractCard):
     """Карточка пользователя."""
 
     _meta: MetaData
@@ -108,6 +110,9 @@ class CardData(AbstractCardData):
     _password: ParamType = field(repr=False)
     _url: ParamType
     _description: ParamType
+
+    # Флаг шифровки данных карточки пользователя
+    _is_encrypted: bool = field(default=False, init=False, repr=False)
 
     @property
     def meta(self) -> MetaData:
@@ -134,7 +139,7 @@ class CardData(AbstractCardData):
         return self._description
 
     def encrypt(self) -> None:
-        """ Шифровка данных."""
+        """Шифровка данных."""
         encrypt_partial = partial(self.xor_otp_encrypt, key=self._meta.key)
 
         self._username = encrypt_partial(self._username)
@@ -143,28 +148,53 @@ class CardData(AbstractCardData):
         self._url = encrypt_partial(self._url)
         self._description = encrypt_partial(self._description)
 
+        self._is_encrypted = True
+
     def decrypt(self) -> None:
-        """ Расшифровка данных."""
+        """Расшифровка данных."""
         self.encrypt()  # toggle из-за метода шифровки (XOR OTP)
+        self._is_encrypted = False
 
     def to_dict(self) -> CardDataDTO:
+        """
+        Преобразование в словарь.
+
+        Проверка на шифрованность данных карточки пользователя для
+        корректного преобразования в словарь.
+
+        :return: Словарь с данными карточки пользователя.
+        :rtype: CardDataDTO
+        """
+        if self._is_encrypted:
+            username = self._username.hex() \
+                if self._username is not None else None
+            email = self._email.hex() \
+                if self._email is not None else None
+            password = self._password.hex() \
+                if self._password is not None else None
+            url = self._url.hex() \
+                if self._url is not None else None
+            description = self._description.hex() \
+                if self._description is not None else None
+        else:
+            username = self._username.decode('utf-8') \
+                if self._username is not None else None
+            email = self._email.decode('utf-8') \
+                if self._email is not None else None
+            password = self._password.decode('utf-8') \
+                if self._password is not None else None
+            url = self._url.decode('utf-8') \
+                if self._url is not None else None
+            description = self._description.decode('utf-8') \
+                if self._description is not None else None
+
         return {
             'meta': self._meta.to_dict(),
-
-            'username': self._username.decode('utf-8')
-            if self._username is not None else None,
-
-            'email': self._email.decode('utf-8')
-            if self._email is not None else None,
-
-            'password': self._password.decode('utf-8')
-            if self._password is not None else None,
-
-            'url': self._url.decode('utf-8')
-            if self._url is not None else None,
-
-            'description': self._description.decode('utf-8')
-            if self._description is not None else None
+            'username': username,
+            'email': email,
+            'password': password,
+            'url': url,
+            'description': description
         }
 
     @staticmethod
@@ -202,7 +232,8 @@ class CardData(AbstractCardData):
                             Если ключ начинается с параметра.
         """
         for param_field in fields(self):
-            if param_field.name == '_meta': continue  # noqa: E701
+            if param_field.name in ('_meta', '_is_encrypted'):
+                continue
             if (param := getattr(self, param_field.name)) is not None:
                 if param == self._meta.key:
                     raise ValueError("Параметр и ключ не должны быть "

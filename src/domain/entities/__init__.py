@@ -1,3 +1,3 @@
-from .card import CardData, MetaData
+from .card import Card, MetaData
 
-__all__ = ['CardData', 'MetaData']
+__all__ = ['Card', 'MetaData']
