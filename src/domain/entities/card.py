@@ -7,7 +7,7 @@ from functools import partial
 from math import ceil
 from typing import TYPE_CHECKING, TypedDict
 
-from ..interfaces import AbstractData, AbstractCardData
+from ..interfaces import AbstractData, AbstractCard
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -99,7 +99,7 @@ class MetaData(AbstractData):
 
 
 @dataclass(slots=True)
-class CardData(AbstractCardData):
+class Card(AbstractCard):
     """Карточка пользователя."""
 
     _meta: MetaData

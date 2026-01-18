@@ -12,7 +12,7 @@ class AbstractData(ABC):
         pass
 
 
-class AbstractCardData(AbstractData):
+class AbstractCard(AbstractData):
     """ Абстрактный класс карточки пользователя."""
 
     @abstractmethod

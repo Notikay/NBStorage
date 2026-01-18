@@ -1,3 +1,3 @@
-from .data import AbstractData, AbstractCardData
+from .data import AbstractData, AbstractCard
 
-__all__ = ['AbstractData', 'AbstractCardData']
+__all__ = ['AbstractData', 'AbstractCard']
