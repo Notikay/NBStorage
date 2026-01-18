@@ -69,6 +69,15 @@ class MetaData(AbstractData):
         return self.__key
 
     def to_dict(self) -> MetaDataDTO:
+        """
+        Преобразование в словарь.
+
+        Путь к иконке карточки пользователя и ID карточки пользователя
+        преобразуются в строки.
+
+        :return: Словарь с метаданными карточки пользователя.
+        :rtype: MetaDataDTO
+        """
         return {
             'title': self._title,
             'icon_path': str(self._icon_path),
