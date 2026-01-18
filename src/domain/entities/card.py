@@ -46,6 +46,8 @@ class MetaData(AbstractData):
         repr=False
     )
 
+    ICON_EXTS = {'.png', '.jpg', '.jpeg', '.webp', '.svg', '.ico', '.icon'}
+
     @property
     def title(self) -> str:
         return self._title
@@ -89,9 +91,9 @@ class MetaData(AbstractData):
         """
         if not self._title:
             raise ValueError("Заголовок карточки не должен быть пустым!")
-        elif not self._icon_path.is_file():
-            raise FileNotFoundError("Иконка карточки пользователя не найдена "
-                                    f"по пути: {self._icon_path}")
+        elif self._icon_path.suffix.lower() not in self.ICON_EXTS:
+            raise ValueError("Иконка карточки пользователя имеет "
+                             "неподдерживаемый формат!")
         elif not self._user_login:
             raise ValueError("Логин пользователя не должен быть пустым!")
 
