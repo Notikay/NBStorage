@@ -22,7 +22,7 @@ class MetaDataDTO(TypedDict):
     card_id: str
 
 
-class CardDataDTO(TypedDict):
+class CardDTO(TypedDict):
     meta: MetaDataDTO
     username: str | None
     email: str | None
@@ -69,6 +69,15 @@ class MetaData(AbstractData):
         return self.__key
 
     def to_dict(self) -> MetaDataDTO:
+        """
+        Преобразование в словарь.
+
+        Путь к иконке карточки пользователя и ID карточки пользователя
+        преобразуются в строки.
+
+        :return: Словарь с метаданными карточки пользователя.
+        :rtype: MetaDataDTO
+        """
         return {
             'title': self._title,
             'icon_path': str(self._icon_path),
@@ -155,7 +164,7 @@ class Card(AbstractCard):
         self.encrypt()  # toggle из-за метода шифровки (XOR OTP)
         self._is_encrypted = False
 
-    def to_dict(self) -> CardDataDTO:
+    def to_dict(self) -> CardDTO:
         """
         Преобразование в словарь.
 
@@ -163,7 +172,7 @@ class Card(AbstractCard):
         корректного преобразования в словарь.
 
         :return: Словарь с данными карточки пользователя.
-        :rtype: CardDataDTO
+        :rtype: CardDTO
         """
         if self._is_encrypted:
             username = self._username.hex() \
