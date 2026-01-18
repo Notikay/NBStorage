@@ -41,7 +41,7 @@ class MetaData(AbstractData):
 
     __card_id: uuid.UUID = field(init=False)
     __key: bytes = field(
-        default=secrets.token_bytes(32),
+        default_factory=lambda: secrets.token_bytes(32),
         init=False,
         repr=False
     )
