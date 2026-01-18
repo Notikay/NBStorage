@@ -32,3 +32,36 @@ Documentation = "https://github.com/Notikay/NBStorage/tree/master/docs/"
 Repository = "https://github.com/Notikay/NBStorage.git"
 "Bug Tracker" = "https://github.com/Notikay/NBStorage/issues"
 Changelog = "https://github.com/Notikay/NBStorage/tree/master/CHANGELOG.md"
+
+[tool.ruff]
+required-version = ">=0.14.13"
+exclude = [
+    "__pycache__",
+    ".venv",
+    ".git",
+    "build",
+    "dist",
+    "data",
+    "docs",
+    "logs",
+    ".ruff_cache",
+    ".mypy_cache",
+    ".pytest_cache",
+]
+line-length = 79
+target-version = "py313"
+
+[tool.ruff.lint.pycodestyle]
+max-doc-length = 72
+
+[tool.ruff.lint.per-file-ignores]
+"*.ipynb" = [
+    "E402",  # Импорты могут быть не в начале
+    "T201"  # Разрешение print() в отчетах
+]
+"tests/*" = [
+    "S101"  # Разрешение assert в тестах
+]
+
+[tool.ruff.format]
+docstring-code-format = true
