@@ -5,10 +5,10 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from src.domain.entities import MetaData
+from domain.entities import MetaData
 
 if TYPE_CHECKING:
-    from src.domain.entities import MetaDataDTO
+    from domain.entities import MetaDataDTO
 
 
 class TestMetaData:
