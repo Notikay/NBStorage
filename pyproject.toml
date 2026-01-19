@@ -71,6 +71,7 @@ docstring-code-format = true
 # MyPy
 [tool.mypy]
 python_version = "3.13"
+mypy_path = ["src"]
 
 # Pytest
 [tool.pytest.ini_options]
