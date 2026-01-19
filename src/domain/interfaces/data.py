@@ -1,24 +1,24 @@
 from abc import ABC, abstractmethod
-from typing import ParamSpec, Any
+from typing import Any, Mapping, TypeVar, Generic
 
-P = ParamSpec('P')
+T = TypeVar("T", bound=Mapping[str, Any])
 
 
-class AbstractData(ABC):
+class AbstractData(ABC, Generic[T]):
     """ Абстрактный класс данных."""
 
     @abstractmethod
-    def to_dict(self, *args: P.args, **kwargs: P.kwargs) -> dict[Any, Any]:
+    def to_dict(self, *args: Any, **kwargs: Any) -> T:
         pass
 
 
-class AbstractCard(AbstractData):
+class AbstractCard(AbstractData[T]):
     """ Абстрактный класс карточки пользователя."""
 
     @abstractmethod
-    def encrypt(self, *args: P.args, **kwargs: P.kwargs) -> Any:
+    def encrypt(self, *args: Any, **kwargs: Any) -> Any:
         pass
 
     @abstractmethod
-    def decrypt(self, *args: P.args, **kwargs: P.kwargs) -> Any:
+    def decrypt(self, *args: Any, **kwargs: Any) -> Any:
         pass

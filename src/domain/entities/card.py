@@ -12,8 +12,6 @@ from ..interfaces import AbstractData, AbstractCard
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from ..interfaces.types import ParamType
-
 
 class MetaDataDTO(TypedDict):
     title: str
@@ -32,7 +30,7 @@ class CardDTO(TypedDict):
 
 
 @dataclass(slots=True)
-class MetaData(AbstractData):
+class MetaData(AbstractData[MetaDataDTO]):
     """Метаданные карточки пользователя."""
 
     _title: str
@@ -110,15 +108,15 @@ class MetaData(AbstractData):
 
 
 @dataclass(slots=True)
-class Card(AbstractCard):
+class Card(AbstractCard[CardDTO]):
     """Карточка пользователя."""
 
     _meta: MetaData
-    _username: ParamType
-    _email: ParamType = field(repr=False)
-    _password: ParamType = field(repr=False)
-    _url: ParamType
-    _description: ParamType
+    _username: bytes | None
+    _email: bytes | None = field(repr=False)
+    _password: bytes | None = field(repr=False)
+    _url: bytes | None
+    _description: bytes | None
 
     # Флаг шифровки данных карточки пользователя
     _is_encrypted: bool = field(default=False, init=False, repr=False)
@@ -128,23 +126,23 @@ class Card(AbstractCard):
         return self._meta
 
     @property
-    def username(self) -> ParamType:
+    def username(self) -> bytes | None:
         return self._username
 
     @property
-    def email(self) -> ParamType:
+    def email(self) -> bytes | None:
         return self._email
 
     @property
-    def password(self) -> ParamType:
+    def password(self) -> bytes | None:
         return self._password
 
     @property
-    def url(self) -> ParamType:
+    def url(self) -> bytes | None:
         return self._url
 
     @property
-    def description(self) -> ParamType:
+    def description(self) -> bytes | None:
         return self._description
 
     def encrypt(self) -> None:
@@ -207,7 +205,7 @@ class Card(AbstractCard):
         }
 
     @staticmethod
-    def xor_otp_encrypt(param: ParamType, key: bytes) -> bytes | None:
+    def xor_otp_encrypt(param: bytes | None, key: bytes) -> bytes | None:
         """
         Шифровка параметра методом XOR OTP.
 
@@ -215,7 +213,7 @@ class Card(AbstractCard):
         параметра будет None, несмотря на ключ.
 
         :param param: Параметр, который нужно зашифровать.
-        :type param: ParamType
+        :type param: bytes | None
 
         :param key: Ключ шифровки.
         :type key: bytes
