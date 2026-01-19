@@ -77,3 +77,4 @@ explicit_package_bases = true  # Предотвращает дублирован
 # Pytest
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath=["src"]
