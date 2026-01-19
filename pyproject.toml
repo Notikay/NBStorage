@@ -72,6 +72,7 @@ docstring-code-format = true
 [tool.mypy]
 python_version = "3.13"
 mypy_path = ["src"]
+explicit_package_bases = true  # Предотвращает дублирование импортов
 
 # Pytest
 [tool.pytest.ini_options]
