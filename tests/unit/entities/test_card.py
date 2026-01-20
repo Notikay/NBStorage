@@ -107,3 +107,20 @@ class TestMetaData:
             "ID карточки пользователя из словаря метаданных не совпадает с "
             "ID из экземпляра класса!"
         )
+
+    # === Негативные тесты ===
+    def test_raises_value_error_metadata_when_title_is_empty(self):
+        with pytest.raises(ValueError):
+            MetaData('', Path('./icon.png'), 'test_user_login')
+
+    def test_raises_value_error_metadata_when_icon_path_incorrect_ext(self):
+        with pytest.raises(ValueError):
+            MetaData('test_title', Path('./icon.bad_ext'), 'test_user_login')
+
+    def test_raises_value_error_metadata_when_icon_path_is_empty(self):
+        with pytest.raises(ValueError):
+            MetaData('test_title', Path(''), 'test_user_login')
+
+    def test_raises_value_error_metadata_when_user_login_is_empty(self):
+        with pytest.raises(ValueError):
+            MetaData('test_title', Path('./icon.png'), '')
