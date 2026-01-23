@@ -21,10 +21,6 @@ class TestMetaData:
     )
 
     @pytest.fixture
-    def meta(self) -> MetaData:
-        return MetaData(*self.METADATA_TEST_PARAMS)
-
-    @pytest.fixture
     def meta_dict(self, meta: MetaData) -> MetaDataDTO:
         return meta.to_dict()
 
