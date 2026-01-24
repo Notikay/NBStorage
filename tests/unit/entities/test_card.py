@@ -405,12 +405,12 @@ class TestCard:
 
     def test_successful_card_check_is_encrypted_flag(self, card: Card):
         card.encrypt()
-        assert card._is_encrypted, (
+        assert card.is_encrypted, (
             "Флаг шифровки показывает, что данные карточки пользователя не "
             "зашифрованы!"
         )
         card.decrypt()
-        assert not card._is_encrypted, (
+        assert not card.is_encrypted, (
             "Флаг шифровки показывает, что данные карточки пользователя "
             "зашифрованы!"
         )
