@@ -145,6 +145,10 @@ class Card(AbstractCard[CardDTO]):
     def description(self) -> bytes | None:
         return self._description
 
+    @property
+    def is_encrypted(self) -> bool:
+        return self._is_encrypted
+
     def encrypt(self) -> None:
         """Шифровка данных."""
         encrypt_partial = partial(self.xor_otp_encrypt, key=self._meta.key)
