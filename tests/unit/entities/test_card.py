@@ -414,3 +414,19 @@ class TestCard:
             "Флаг шифровки показывает, что данные карточки пользователя "
             "зашифрованы!"
         )
+
+    def test_return_card_xor_otp_encrypt_is_none(self, card: Card):
+        encrypted_param = card.xor_otp_encrypt(None, card.meta.key)
+        assert encrypted_param is None, \
+            "Результат шифровки None, не является None!"
+
+    def test_successful_card_xor_otp_encrypt(self, card: Card):
+        encrypted_param = card.xor_otp_encrypt(
+            self.CARD_TEST_PARAMS[0],
+            card.meta.key
+        )
+        assert encrypted_param != self.CARD_TEST_PARAMS[0], \
+            "Результат шифровки параметра не отличается от исходного!"
+        decrypt_param = card.xor_otp_encrypt(encrypted_param, card.meta.key)
+        assert decrypt_param == self.CARD_TEST_PARAMS[0], \
+            "Результат расшифровки параметра не совпадает с исходным!"
