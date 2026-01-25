@@ -414,3 +414,39 @@ class TestCard:
             "Флаг шифровки показывает, что данные карточки пользователя "
             "зашифрованы!"
         )
+
+    def test_return_card_xor_otp_encrypt_is_none(self, card: Card):
+        encrypted_param = card.xor_otp_encrypt(None, card.meta.key)
+        assert encrypted_param is None, \
+            "Результат шифровки None, не является None!"
+
+    def test_successful_card_xor_otp_encrypt(self, card: Card):
+        encrypted_param = card.xor_otp_encrypt(
+            self.CARD_TEST_PARAMS[0],
+            card.meta.key
+        )
+        assert encrypted_param != self.CARD_TEST_PARAMS[0], \
+            "Результат шифровки параметра не отличается от исходного!"
+        decrypt_param = card.xor_otp_encrypt(encrypted_param, card.meta.key)
+        assert decrypt_param == self.CARD_TEST_PARAMS[0], \
+            "Результат расшифровки параметра не совпадает с исходным!"
+
+    # === Негативные тесты ===
+    def test_raises_value_error_card_when_param_is_equal_key(
+            self,
+            meta: MetaData
+    ):
+        with pytest.raises(ValueError):
+            Card(meta, meta.key, None, None, None, None)
+
+    def test_raises_value_error_card_when_param_is_empty(self, meta: MetaData):
+        with pytest.raises(ValueError):
+            Card(meta, b'', None, None, None, None)
+
+    def test_raises_value_error_card_when_key_start_with_param(
+            self,
+            meta: MetaData
+    ):
+        test_param = meta.key[:5]
+        with pytest.raises(ValueError):
+            Card(meta, test_param, None, None, None, None)
