@@ -430,3 +430,23 @@ class TestCard:
         decrypt_param = card.xor_otp_encrypt(encrypted_param, card.meta.key)
         assert decrypt_param == self.CARD_TEST_PARAMS[0], \
             "Результат расшифровки параметра не совпадает с исходным!"
+
+    # === Негативные тесты ===
+    def test_raises_value_error_card_when_param_is_equal_key(
+            self,
+            meta: MetaData
+    ):
+        with pytest.raises(ValueError):
+            Card(meta, meta.key, None, None, None, None)
+
+    def test_raises_value_error_card_when_param_is_empty(self, meta: MetaData):
+        with pytest.raises(ValueError):
+            Card(meta, b'', None, None, None, None)
+
+    def test_raises_value_error_card_when_key_start_with_param(
+            self,
+            meta: MetaData
+    ):
+        test_param = meta.key[:5]
+        with pytest.raises(ValueError):
+            Card(meta, test_param, None, None, None, None)
