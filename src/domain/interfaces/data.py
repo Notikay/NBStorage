@@ -5,7 +5,7 @@ T = TypeVar("T", bound=Mapping[str, Any])
 
 
 class AbstractData(ABC, Generic[T]):
-    """ Абстрактный класс данных."""
+    """Абстрактный класс данных."""
 
     @abstractmethod
     def to_dict(self, *args: Any, **kwargs: Any) -> T:
@@ -13,7 +13,7 @@ class AbstractData(ABC, Generic[T]):
 
 
 class AbstractCard(AbstractData[T]):
-    """ Абстрактный класс карточки пользователя."""
+    """Абстрактный класс карточки пользователя."""
 
     @abstractmethod
     def encrypt(self, *args: Any, **kwargs: Any) -> Any:
