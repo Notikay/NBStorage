@@ -44,7 +44,7 @@ class MetaData(AbstractData[MetaDataDTO]):
         repr=False
     )
 
-    ICON_EXTS = {'.png', '.jpg', '.jpeg', '.webp', '.svg', '.ico', '.icon'}
+    __ICON_EXTS = {'.png', '.jpg', '.jpeg', '.webp', '.svg', '.ico', '.icon'}
 
     @property
     def title(self) -> str:
@@ -98,7 +98,7 @@ class MetaData(AbstractData[MetaDataDTO]):
         """
         if not self._title:
             raise ValueError("Заголовок карточки не должен быть пустым!")
-        elif self._icon_path.suffix.lower() not in self.ICON_EXTS:
+        elif self._icon_path.suffix.lower() not in self.__ICON_EXTS:
             raise ValueError("Иконка карточки пользователя имеет "
                              "неподдерживаемый формат!")
         elif not self._user_login:
