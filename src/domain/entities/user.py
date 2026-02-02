@@ -60,6 +60,17 @@ class Settings(AbstractData[SettingsDTO]):
         }
 
     def __post_init__(self) -> None:
+        """
+        Обработка после инициализации настроек пользователя.
+
+        Проверка на корректность настроек пользователя.
+        Генерация ID карточки пользователя.
+
+        :raises ValueError: Если имя пользователя пустое.
+                            Если аватарка пользователя имеет неподдерживаемый
+                            формат.
+                            Если время блокировки отрицательное.
+        """
         if not self._name:
             raise ValueError("Имя пользователя не должно быть пустым!")
         elif self._avatar_path.suffix.lower() not in self.__ICON_EXTS:
@@ -156,6 +167,8 @@ class User(AbstractData[UserDTO]):
 
         Проверка на корректность пользователя.
         Хеширование пароля.
+
+        :raises ValueError: Если логин или пароль пользователя пустые.
         """
 
         if not self._login:
