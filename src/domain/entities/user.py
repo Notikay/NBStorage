@@ -171,7 +171,6 @@ class User(AbstractData[UserDTO]):
 
         :raises ValueError: Если логин или пароль пользователя пустые.
         """
-
         if not self._login:
             raise ValueError("Логин пользователя не должен быть пустым!")
         elif not self._password:
