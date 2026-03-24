@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from domain.entities import MetaData
+from domain.entities import MetaData, Settings
 
 if TYPE_CHECKING:
     from pytest import FixtureRequest
@@ -20,3 +20,14 @@ def meta(request: FixtureRequest) -> MetaData:
             "карточки пользователя."
         )
     return MetaData(*test_params)
+
+@pytest.fixture
+def settings(request: FixtureRequest) -> Settings:
+    test_params = getattr(request.cls, 'SETTINGS_TEST_PARAMS', None)
+    if test_params is None:
+        pytest.fail(
+             f"Класс тестов {request.cls.__name__} не имеет атрибута "
+             "SETTINGS_TEST_PARAMS, с тестовыми параметрами для настроек "
+             "пользователя."
+        )
+    return Settings(*test_params)
