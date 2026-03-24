@@ -69,7 +69,8 @@ class Settings(AbstractData[SettingsDTO]):
         :raises ValueError: Если имя пользователя пустое.
                             Если аватарка пользователя имеет
                             неподдерживаемый формат.
-                            Если время блокировки отрицательное.
+                            Если время блокировки сессии пользователя
+                            отрицательное.
         """
         if not self._name:
             raise ValueError("Имя пользователя не должно быть пустым!")
@@ -77,8 +78,8 @@ class Settings(AbstractData[SettingsDTO]):
             raise ValueError("Аватарка пользователя имеет неподдерживаемый "
                              "формат!")
         elif self._time_block < 0:
-            raise ValueError("Время блокировки не может быть отрицательным!")
-
+            raise ValueError("Время блокировки сессии пользователя не может "
+                             "быть отрицательным!")
 
 @dataclass(slots=True)
 class User(AbstractData[UserDTO]):
@@ -170,7 +171,6 @@ class User(AbstractData[UserDTO]):
 
         :raises ValueError: Если логин или пароль пользователя пустые.
         """
-
         if not self._login:
             raise ValueError("Логин пользователя не должен быть пустым!")
         elif not self._password:
