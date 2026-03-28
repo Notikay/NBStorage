@@ -22,3 +22,11 @@ class AbstractCard(AbstractData[T]):
     @abstractmethod
     def decrypt(self, *args: Any, **kwargs: Any) -> Any:
         pass
+
+
+class AbstractUser(AbstractData[T]):
+    """Абстрактный класс пользователя."""
+
+    @abstractmethod
+    def hash_password(self, *args: Any, **kwargs: Any) -> Any:
+        pass
