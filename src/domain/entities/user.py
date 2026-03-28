@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from hashlib import pbkdf2_hmac
 from typing import TYPE_CHECKING, TypedDict
 
-from ..interfaces import AbstractData
+from ..interfaces import AbstractData, AbstractUser
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -82,7 +82,7 @@ class Settings(AbstractData[SettingsDTO]):
                              "быть отрицательным!")
 
 @dataclass(slots=True)
-class User(AbstractData[UserDTO]):
+class User(AbstractUser[UserDTO]):
     """Пользователь."""
 
     _login: str
@@ -110,6 +110,10 @@ class User(AbstractData[UserDTO]):
     @property
     def salt(self) -> bytes:
         return self.__salt
+
+    def hash_password(self) -> None:
+        """Хеширование пароля."""
+        self._password = self.sha512_hash_password(self._password, self.__salt)
 
     def to_dict(self) -> UserDTO:
         """
@@ -175,5 +179,3 @@ class User(AbstractData[UserDTO]):
             raise ValueError("Логин пользователя не должен быть пустым!")
         elif not self._password:
             raise ValueError("Пароль пользователя не должен быть пустым!")
-
-        self._password = self.sha512_hash_password(self._password, self.__salt)
