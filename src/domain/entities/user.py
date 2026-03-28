@@ -18,8 +18,8 @@ class SettingsDTO(TypedDict):
 
 
 class UserDTO(TypedDict):
-    login: str
     settings: SettingsDTO
+    login: str
 
 
 @dataclass(slots=True)
@@ -85,9 +85,9 @@ class Settings(AbstractData[SettingsDTO]):
 class User(AbstractUser[UserDTO]):
     """Пользователь."""
 
+    _settings: Settings
     _login: str
     _password: bytes = field(repr=False)
-    _settings: Settings
 
     __salt: bytes = field(
         default_factory=lambda: secrets.token_bytes(16),
@@ -96,16 +96,16 @@ class User(AbstractUser[UserDTO]):
     )
 
     @property
+    def settings(self) -> Settings:
+        return self._settings
+
+    @property
     def login(self) -> str:
         return self._login
 
     @property
     def password(self) -> bytes:
         return self._password
-
-    @property
-    def settings(self) -> Settings:
-        return self._settings
 
     @property
     def salt(self) -> bytes:
@@ -125,8 +125,8 @@ class User(AbstractUser[UserDTO]):
         :rtype: UserDTO
         """
         return {
-            'login': self._login,
-            'settings': self._settings.to_dict()
+            'settings': self._settings.to_dict(),
+            'login': self._login
         }
 
     @staticmethod
