@@ -5,7 +5,7 @@ import uuid
 from dataclasses import dataclass, field, fields
 from functools import partial
 from math import ceil
-from typing import TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING, TypedDict, Self
 
 from ..interfaces import AbstractData, AbstractCard
 
@@ -236,7 +236,7 @@ class Card(AbstractCard[CardDTO]):
 
         return bytes(p ^ k for p, k in zip(param, key))
 
-    def __post_init__(self) -> None:
+    def __post_init__(self: Self) -> None:
         """
         Обработка после инициализации карточки пользователя.
 
