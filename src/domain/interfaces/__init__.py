@@ -1,12 +1,13 @@
-from .data import AbstractData, AbstractCard, AbstractUser
-from .repositories import AbstractRepository, AbstractUserRepository
-from .use_cases import AbstractUseCase
+from .base import (
+    AbstractEntity,
+    AbstractRepository,
+    AbstractUseCase,
+    AbstractUnitOfWork
+)
 
 __all__ = [
-    'AbstractData',
-    'AbstractCard',
-    'AbstractUser',
+    'AbstractEntity',
     'AbstractRepository',
-    'AbstractUserRepository',
-    'AbstractUseCase'
+    'AbstractUseCase',
+    'AbstractUnitOfWork'
 ]
