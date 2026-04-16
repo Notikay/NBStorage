@@ -1,14 +1,14 @@
-from __future__ import annotations
-
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import pytest
 
 from domain.entities import MetaData, Card
-
-if TYPE_CHECKING:
-    from domain.entities import MetaDataDTO, CardDTO
+from domain.entities.card.exceptions import (
+    MetaDataInvalidTitleError,
+    MetaDataInvalidIconPathError,
+    MetaDataInvalidUserLoginError,
+    CardInvalidParamFieldError
+)
 
 
 class TestMetaData:
@@ -20,105 +20,118 @@ class TestMetaData:
         'test_user_login'
     )
 
-    @pytest.fixture
-    def meta_dict(self, meta: MetaData) -> MetaDataDTO:
-        return meta.to_dict()
-
     # === Позитивные тесты ===
     def test_create_metadata(self):
-        meta = MetaData(*self.METADATA_TEST_PARAMS)
-        assert meta, "Ошибка при создании метаданных карточки пользователя!"
+        assert MetaData(*self.METADATA_TEST_PARAMS), \
+            "Ошибка при создании метаданных карточки пользователя!"
 
-    def test_return_metadata_correct_values(self, meta: MetaData):
-        assert meta.title == self.METADATA_TEST_PARAMS[0], \
+    def test_metadata_return_correct_values(self):
+        metadata = MetaData(*self.METADATA_TEST_PARAMS)
+
+        assert metadata.title == self.METADATA_TEST_PARAMS[0], \
             "Название карточки пользователя не совпадает с входным!"
-        assert meta.icon_path == self.METADATA_TEST_PARAMS[1], \
+        assert metadata.icon_path == self.METADATA_TEST_PARAMS[1], \
             "Путь к иконке карточки пользователя не совпадает с входным!"
-        assert meta.user_login == self.METADATA_TEST_PARAMS[2], (
+        assert metadata.user_login == self.METADATA_TEST_PARAMS[2], (
             "Логин пользователя, которому принадлежит карточка, не совпадает "
             "с входным!"
         )
 
-    def test_return_metadata_key_is_not_empty(self, meta: MetaData):
-        assert meta.key, "Ключ в метаданных карточки пользователя пуст!"
+    def test_metadata_return_key_is_not_empty(self):
+        key = MetaData(*self.METADATA_TEST_PARAMS).key
 
-    def test_return_metadata_key_is_unique(self, meta: MetaData):
+        assert key, "Ключ в метаданных карточки пользователя пуст!"
+
+    def test_metadata_return_key_is_unique(self):
+        key = MetaData(*self.METADATA_TEST_PARAMS).key
         another_key = MetaData(*self.METADATA_TEST_PARAMS).key
-        assert another_key != meta.key, \
+
+        assert another_key != key, \
             "Ключ в метаданных карточки пользователя не уникален!"
 
-    def test_return_metadata_card_id_is_not_empty(self, meta: MetaData):
-        assert meta.card_id, "ID карточки пользователя пуст!"
+    def test_metadata_return_card_id_is_not_empty(self):
+        card_id = MetaData(*self.METADATA_TEST_PARAMS).card_id
 
-    def test_return_metadata_card_id_is_unique(self, meta: MetaData):
+        assert card_id, "ID карточки пользователя пуст!"
+
+    def test_metadata_return_card_id_is_unique(self):
+        card_id = MetaData(*self.METADATA_TEST_PARAMS).card_id
         another_card_id = MetaData(*self.METADATA_TEST_PARAMS).card_id
-        assert another_card_id != meta.card_id, \
+
+        assert another_card_id != card_id, \
             "ID карточки пользователя не уникален!"
 
-    def test_return_metadata_to_dict_is_dict_type(
-            self,
-            meta_dict: MetaDataDTO
-    ):
-        assert isinstance(meta_dict, dict), \
+    def test_metadata_return_card_id_restored_from_key(self):
+        metadata = MetaData(*self.METADATA_TEST_PARAMS)
+        card_id = MetaData(
+            metadata.title,
+            metadata.icon_path,
+            metadata.user_login,
+            metadata.key
+        ).card_id
+
+        assert card_id == metadata.card_id, \
+            "ID карточки пользователя был восстановлен неверно!"
+
+    def test_metadata_return_to_dict_is_dict_type(self):
+        metadata_dict = MetaData(*self.METADATA_TEST_PARAMS).to_dict()
+
+        assert isinstance(metadata_dict, dict), \
             "Ошибка преобразования метаданных карточки пользователя в словарь!"
 
-    def test_return_metadata_to_dict_is_not_empty(
-            self,
-            meta_dict: MetaDataDTO
-    ):
-        assert meta_dict, "Словарь метаданных карточки пользователя пуст!"
+    def test_metadata_return_to_dict_is_not_empty(self):
+        metadata_dict = MetaData(*self.METADATA_TEST_PARAMS).to_dict()
 
-    def test_return_metadata_to_dict_icon_path_is_str_type(
-            self,
-            meta_dict: MetaDataDTO
-    ):
-        assert isinstance(meta_dict['icon_path'], str), \
+        assert metadata_dict, "Словарь метаданных карточки пользователя пуст!"
+
+    def test_metadata_return_to_dict_icon_path_is_str_type(self):
+        metadata_dict = MetaData(*self.METADATA_TEST_PARAMS).to_dict()
+
+        assert isinstance(metadata_dict['icon_path'], str), \
             "Путь к иконке карточки пользователя не является строкой!"
 
-    def test_return_metadata_to_dict_card_id_is_str_type(
-            self,
-            meta_dict: MetaDataDTO
-    ):
-        assert isinstance(meta_dict['card_id'], str), \
+    def test_metadata_return_to_dict_card_id_is_str_type(self):
+        metadata_dict = MetaData(*self.METADATA_TEST_PARAMS).to_dict()
+
+        assert isinstance(metadata_dict['card_id'], str), \
             "ID карточки пользователя не является строкой!"
 
-    def test_successful_metadata_to_dict_correct_values(
-            self,
-            meta: MetaData,
-            meta_dict: MetaDataDTO
-    ):
-        assert meta_dict['title'] == meta.title, (
+    def test_metadata_successful_to_dict_correct_values(self):
+        metadata = MetaData(*self.METADATA_TEST_PARAMS)
+        metadata_dict = metadata.to_dict()
+
+        assert metadata_dict['title'] == metadata.title, (
             "Название карточки пользователя, из словаря метаданных, не "
             "совпадает с названием из экземпляра класса!"
         )
-        assert meta_dict['icon_path'] == str(meta.icon_path), (
+        assert metadata_dict['icon_path'] == str(metadata.icon_path), (
             "Путь к иконке карточки пользователя, из словаря метаданных, не "
             "совпадает с путем из экземпляра класса!"
         )
-        assert meta_dict['user_login'] == meta.user_login, (
+        assert metadata_dict['user_login'] == metadata.user_login, (
             "Логин пользователя, которому принадлежит карточка, из словаря "
             "метаданных, не совпадает с логином из экземпляра класса!"
         )
-        assert meta_dict['card_id'] == str(meta.card_id), (
+        assert metadata_dict['card_id'] == str(metadata.card_id), (
             "ID карточки пользователя, из словаря метаданных, не совпадает с "
             "ID из экземпляра класса!"
         )
 
     # === Негативные тесты ===
-    def test_raises_value_error_metadata_when_title_is_empty(self):
-        with pytest.raises(ValueError):
+    def test_metadata_raises_invalid_title_is_empty(self):
+        with pytest.raises(MetaDataInvalidTitleError):
             MetaData('', Path('./icon.png'), 'test_user_login')
 
-    def test_raises_value_error_metadata_when_icon_path_incorrect_ext(self):
-        with pytest.raises(ValueError):
+    def test_metadata_raises_invalid_icon_path_incorrect_ext(self):
+        with pytest.raises(MetaDataInvalidIconPathError):
             MetaData('test_title', Path('./icon.bad_ext'), 'test_user_login')
 
-    def test_raises_value_error_metadata_when_icon_path_is_empty(self):
-        with pytest.raises(ValueError):
+    def test_metadata_raises_invalid_icon_path_is_empty(self):
+        with pytest.raises(MetaDataInvalidIconPathError):
             MetaData('test_title', Path(''), 'test_user_login')
 
-    def test_raises_value_error_metadata_when_user_login_is_empty(self):
-        with pytest.raises(ValueError):
+    def test_metadata_raises_invalid_user_login_is_empty(self):
+        with pytest.raises(MetaDataInvalidUserLoginError):
             MetaData('test_title', Path('./icon.png'), '')
 
 
@@ -133,23 +146,17 @@ class TestCard:
     CARD_TEST_PARAMS = ('test_param'.encode('utf-8'),)*5
 
     @pytest.fixture
-    def card(self, meta: MetaData) -> Card:
-        return Card(meta, *self.CARD_TEST_PARAMS)
-
-    @pytest.fixture
-    def card_none(self, meta: MetaData) -> Card:
-        return Card(meta, None, None, None, None, None)
-
-    @pytest.fixture
-    def card_dict(self, card: Card) -> CardDTO:
-        return card.to_dict()
+    def metadata(self) -> MetaData:
+        return MetaData(*self.METADATA_TEST_PARAMS)
 
     # === Позитивные тесты ===
-    def test_create_card(self, meta: MetaData):
-        assert Card(meta, *self.CARD_TEST_PARAMS), \
+    def test_create_card(self, metadata: MetaData):
+        assert Card(metadata, *self.CARD_TEST_PARAMS), \
             "Ошибка при создании карточки пользователя!"
 
-    def test_return_card_correct_values(self, card: Card):
+    def test_card_return_correct_values(self, metadata: MetaData):
+        card = Card(metadata, *self.CARD_TEST_PARAMS)
+
         assert card.username == self.CARD_TEST_PARAMS[0], (
             "Имя пользователя от сервиса, в карточке пользователя, не "
             "совпадает с входным!"
@@ -171,28 +178,30 @@ class TestCard:
             "входным!"
         )
 
-    def test_return_card_to_dict_is_dict_type(self, card_dict: CardDTO):
+    def test_card_return_to_dict_is_dict_type(self, metadata: MetaData):
+        card_dict = Card(metadata, *self.CARD_TEST_PARAMS).to_dict()
+
         assert isinstance(card_dict, dict), \
             "Ошибка преобразования карточки пользователя в словарь!"
 
-    def test_return_card_to_dict_is_not_empty(self, card_dict: CardDTO):
+    def test_card_return_to_dict_is_not_empty(self, metadata: MetaData):
+        card_dict = Card(metadata, *self.CARD_TEST_PARAMS).to_dict()
+
         assert card_dict, "Словарь карточки пользователя пуст!"
 
-    def test_successful_card_to_dict_correct_meta(
-            self,
-            card: Card,
-            card_dict: CardDTO
-    ):
-        assert card_dict['meta'] == card.meta.to_dict(), (
+    def test_card_successful_to_dict_correct_metadata(self, metadata: MetaData):
+        card = Card(metadata, *self.CARD_TEST_PARAMS)
+        card_dict = card.to_dict()
+
+        assert card_dict['metadata'] == card.metadata.to_dict(), (
             "Метаданные карточки пользователя, из словаря карточки "
             "пользователя, не совпадают с метаданными из экземпляра класса!"
         )
 
-    def test_successful_card_to_dict_correct_values(
-            self,
-            card: Card,
-            card_dict: CardDTO
-    ):
+    def test_card_successful_to_dict_correct_values(self, metadata: MetaData):
+        card = Card(metadata, *self.CARD_TEST_PARAMS)
+        card_dict = card.to_dict()
+
         assert card.username is not None, (
             "Имя пользователя от сервиса, в карточке пользователя, является "
             "None!"
@@ -231,8 +240,9 @@ class TestCard:
             "с описанием сервиса из экземпляра класса!"
         )
 
-    def test_successful_card_to_dict_correct_none(self, card_none: Card):
-        card_dict = card_none.to_dict()
+    def test_card_successful_to_dict_correct_none(self, metadata: MetaData):
+        card_dict = Card(metadata, None, None, None, None, None).to_dict()
+
         assert card_dict['username'] is None, (
             "Имя пользователя от сервиса, из словаря карточки пользователя, "
             "не является None!"
@@ -254,8 +264,10 @@ class TestCard:
             "None!"
         )
 
-    def test_return_card_encrypt_change_params(self, card: Card):
+    def test_card_return_encrypt_change_params(self, metadata: MetaData):
+        card = Card(metadata, *self.CARD_TEST_PARAMS)
         card.encrypt()
+
         assert card.username != self.CARD_TEST_PARAMS[0], (
             "Имя пользователя от сервиса, в карточке пользователя, не было "
             "зашифровано!"
@@ -271,8 +283,13 @@ class TestCard:
         assert card.description != self.CARD_TEST_PARAMS[4], \
             "Описание сервиса, в карточке пользователя, не было зашифровано!"
 
-    def test_return_card_encrypt_not_change_none_params(self, card_none: Card):
+    def test_card_return_encrypt_not_change_none_params(
+            self,
+            metadata: MetaData
+    ):
+        card_none = Card(metadata, None, None, None, None, None)
         card_none.encrypt()
+
         assert card_none.username is None, (
             "Имя пользователя от сервиса, в карточке пользователя, не "
             "является None!"
@@ -288,8 +305,10 @@ class TestCard:
         assert card_none.description is None, \
             "Описание сервиса, в карточке пользователя, не является None!"
 
-    def test_return_card_decrypt_change_params(self, card: Card):
+    def test_card_return_decrypt_change_params(self, metadata: MetaData):
+        card = Card(metadata, *self.CARD_TEST_PARAMS)
         card.decrypt()
+
         assert card.username != self.CARD_TEST_PARAMS[0], (
             "Имя пользователя от сервиса, в карточке пользователя, не было "
             "расшифровано!"
@@ -307,8 +326,13 @@ class TestCard:
         assert card.description != self.CARD_TEST_PARAMS[4], \
             "Описание сервиса, в карточке пользователя, не было расшифровано!"
 
-    def test_return_card_decrypt_not_change_none_params(self, card_none):
+    def test_card_return_decrypt_not_change_none_params(
+            self,
+            metadata: MetaData
+    ):
+        card_none = Card(metadata, None, None, None, None, None)
         card_none.decrypt()
+
         assert card_none.username is None, (
             "Имя пользователя от сервиса, в карточке пользователя, не "
             "является None!"
@@ -324,9 +348,14 @@ class TestCard:
         assert card_none.description is None, \
             "Описание сервиса, в карточке пользователя, не является None!"
 
-    def test_successful_card_encrypt_decrypt_pipeline(self, card: Card):
+    def test_card_successful_encrypt_decrypt_pipeline(
+            self,
+            metadata: MetaData
+    ):
+        card = Card(metadata, *self.CARD_TEST_PARAMS)
         card.encrypt()
         card.decrypt()
+
         assert card.username == self.CARD_TEST_PARAMS[0], (
             "Результат шифровки и расшифровки имени пользователя от сервиса "
             "прошел некорректно!"
@@ -348,14 +377,15 @@ class TestCard:
             "некорректно!"
         )
 
-    def test_successful_card_encrypt_decrypt_pipeline_for_several_cards(
+    def test_card_successful_encrypt_decrypt_pipeline_for_several_cards(
             self,
-            card: Card
+            metadata: MetaData
     ):
-        another_meta = MetaData(*self.METADATA_TEST_PARAMS)
-        another_card = Card(another_meta, *self.CARD_TEST_PARAMS)
-
+        card = Card(metadata, *self.CARD_TEST_PARAMS)
         card.encrypt()
+
+        another_metadata = MetaData(*self.METADATA_TEST_PARAMS)
+        another_card = Card(another_metadata, *self.CARD_TEST_PARAMS)
         another_card.encrypt()
 
         assert another_card.username != card.username, (
@@ -403,50 +433,66 @@ class TestCard:
             "пользователей с одинаковыми данными, разный!"
         )
 
-    def test_successful_card_check_is_encrypted_flag(self, card: Card):
+    def test_card_successful_check_is_encrypted_flag(self, metadata: MetaData):
+        card = Card(metadata, *self.CARD_TEST_PARAMS)
         card.encrypt()
+
         assert card.is_encrypted, (
             "Флаг шифровки показывает, что данные карточки пользователя не "
             "зашифрованы!"
         )
+
         card.decrypt()
+
         assert not card.is_encrypted, (
             "Флаг шифровки показывает, что данные карточки пользователя "
             "зашифрованы!"
         )
 
-    def test_return_card_xor_otp_encrypt_is_none(self, card: Card):
-        encrypted_param = card.xor_otp_encrypt(None, card.meta.key)
+    def test_card_return_xor_otp_encrypt_is_none(self, metadata: MetaData):
+        card = Card(metadata, *self.CARD_TEST_PARAMS)
+        encrypted_param = card.xor_otp_encrypt(None, card.metadata.key)
+
         assert encrypted_param is None, \
             "Результат шифровки None, не является None!"
 
-    def test_successful_card_xor_otp_encrypt(self, card: Card):
+    def test_card_successful_xor_otp_encrypt(self, metadata: MetaData):
+        card = Card(metadata, *self.CARD_TEST_PARAMS)
         encrypted_param = card.xor_otp_encrypt(
             self.CARD_TEST_PARAMS[0],
-            card.meta.key
+            card.metadata.key
         )
+
         assert encrypted_param != self.CARD_TEST_PARAMS[0], \
             "Результат шифровки параметра не отличается от исходного!"
-        decrypt_param = card.xor_otp_encrypt(encrypted_param, card.meta.key)
+
+        decrypt_param = card.xor_otp_encrypt(
+            encrypted_param,
+            card.metadata.key
+        )
+
         assert decrypt_param == self.CARD_TEST_PARAMS[0], \
             "Результат расшифровки параметра не совпадает с исходным!"
 
     # === Негативные тесты ===
-    def test_raises_value_error_card_when_param_is_equal_key(
+    def test_card_raises_card_invalid_param_field_is_equal_key(
             self,
-            meta: MetaData
+            metadata: MetaData
     ):
-        with pytest.raises(ValueError):
-            Card(meta, meta.key, None, None, None, None)
+        with pytest.raises(CardInvalidParamFieldError):
+            Card(metadata, metadata.key, None, None, None, None)
 
-    def test_raises_value_error_card_when_param_is_empty(self, meta: MetaData):
-        with pytest.raises(ValueError):
-            Card(meta, b'', None, None, None, None)
-
-    def test_raises_value_error_card_when_key_start_with_param(
+    def test_card_raises_invalid_param_field_is_empty(
             self,
-            meta: MetaData
+            metadata: MetaData
     ):
-        test_param = meta.key[:5]
-        with pytest.raises(ValueError):
-            Card(meta, test_param, None, None, None, None)
+        with pytest.raises(CardInvalidParamFieldError):
+            Card(metadata, b'', None, None, None, None)
+
+    def test_card_raises_invalid_param_field_with_key_start(
+            self,
+            metadata: MetaData
+    ):
+        test_param = metadata.key[:5]
+        with pytest.raises(CardInvalidParamFieldError):
+            Card(metadata, test_param, None, None, None, None)
