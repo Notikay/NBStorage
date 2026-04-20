@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from uuid import UUID
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -10,8 +11,6 @@ from domain.entities import Card, MetaData
 from .base import Base
 
 if TYPE_CHECKING:
-    from uuid import UUID
-
     from .user import UserORM
 
 
@@ -21,11 +20,9 @@ class CardORM(Base):
     __tablename__ = 'cards'
 
     user_login: Mapped[str] = mapped_column(
-        ForeignKey('users.login'),
+        ForeignKey('users.login', onupdate='CASCADE', ondelete='CASCADE'),
         primary_key=True,
-        index=True,
-        onupdate='CASCADE',
-        ondelete='CASCADE'
+        index=True
     )
     card_id: Mapped[UUID] = mapped_column(
         primary_key=True

@@ -82,7 +82,7 @@ class UserStorage(UserRepositoryInterface[User]):
         user_orm = UserORM(
             login=item.login,
             name=item.settings.name,
-            avatar_path=item.settings.avatar_path,
+            avatar_path=str(item.settings.avatar_path),
             time_block=item.settings.time_block,
             password=item.password,
             salt=item.salt
@@ -113,7 +113,7 @@ class UserStorage(UserRepositoryInterface[User]):
             .where(UserORM.login == item.login)
             .values(
                 name=item.settings.name,
-                avatar_path=item.settings.avatar_path,
+                avatar_path=str(item.settings.avatar_path),
                 time_block=item.settings.time_block,
                 password=item.password
             )

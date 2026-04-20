@@ -6,6 +6,7 @@ from domain.interfaces.units.card import CardUnitOfWorkInterface
 from domain.interfaces.units.user import UserUnitOfWorkInterface
 from domain.entities import Card, User
 from .exceptions import SessionIsNotInitializedError
+from ..repositories import CardStorage, UserStorage
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import sessionmaker, Session
@@ -15,7 +16,6 @@ if TYPE_CHECKING:
         UOWValueErrorType,
         UOWTracebackErrorType
     )
-    from ..repositories import CardStorage, UserStorage
 
 
 class TransactionStateManager(
@@ -51,6 +51,11 @@ class TransactionStateManager(
         self.__session: Session | None = None
         self.__card_repos: CardStorage | None = None
         self.__user_repos: UserStorage | None = None
+        self.__is_committed = False
+
+    @property
+    def session(self):
+        return self.__session
 
     @property
     def card_repos(self) -> CardStorage:
@@ -70,6 +75,7 @@ class TransactionStateManager(
 
     def __enter__(self) -> Self:
         self.__session = self.__session_factory()
+        self.__is_committed = False
         return self
 
     def __exit__(
@@ -81,15 +87,17 @@ class TransactionStateManager(
         if self.__session is None:
             raise SessionIsNotInitializedError()
 
-        if exc_type:
+        if exc_type or (not self.__is_committed):
             self.__session.rollback()
         self.__session.close()
+        self.__is_committed = False
 
     def commit(self) -> None:
         """Сохранение изменений в хранилище."""
         if self.__session is None:
             raise SessionIsNotInitializedError()
         self.__session.commit()
+        self.__is_committed = True
 
     def rollback(self) -> None:
         """Откат изменений (хранилище не изменено)."""
