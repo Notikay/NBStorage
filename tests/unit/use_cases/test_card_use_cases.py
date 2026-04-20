@@ -117,6 +117,7 @@ class TestCard:
         for i, res in enumerate(result):
             res_login = res.metadata.user_login
             res_card_id = res.metadata.card_id
+
             assert res_login == all_cards[i].metadata.user_login, \
                 f"Неверный логин пользователя в {i+1} карточке!"
             assert res_card_id == all_cards[i].metadata.card_id, \
