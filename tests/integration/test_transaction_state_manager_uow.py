@@ -14,7 +14,7 @@ from infrastructure.persistence.uow.exceptions import (
 )
 
 if TYPE_CHECKING:
-    from sqlalchemy.orm import Session
+    from sqlalchemy.orm import Session, sessionmaker
 
 
 class CardORMTestParams(TypedDict):
@@ -66,7 +66,9 @@ USER_ORM_TEST_PARAMS: UserORMTestParams = {
 
 # === Позитивные тесты ===
 def test_commit_successfully(db_session: Session):
-    transaction_state_manager = TransactionStateManager(lambda: db_session)
+    transaction_state_manager = TransactionStateManager(
+        lambda: db_session  # type: ignore
+    )
 
     card = Card(
         MetaData(
@@ -114,7 +116,9 @@ def test_commit_successfully(db_session: Session):
 
 
 def test_rollback_successfully(db_session: Session):
-    transaction_state_manager = TransactionStateManager(lambda: db_session)
+    transaction_state_manager = TransactionStateManager(
+        lambda: db_session  # type: ignore
+    )
 
     card = Card(
         MetaData(
@@ -166,7 +170,9 @@ def test_rollback_successfully(db_session: Session):
 
 
 def test_not_saved_when_commit_is_not_call(db_session: Session):
-    transaction_state_manager = TransactionStateManager(lambda: db_session)
+    transaction_state_manager = TransactionStateManager(
+        lambda: db_session  # type: ignore
+    )
 
     card = Card(
         MetaData(
@@ -213,7 +219,9 @@ def test_not_saved_when_commit_is_not_call(db_session: Session):
 
 # === Негативные тесты ===
 def test_commit_raises_session_is_not_initialized():
-    transaction_state_manager = TransactionStateManager(lambda: None)
+    transaction_state_manager = TransactionStateManager(
+        lambda: None  # type: ignore
+    )
 
     with pytest.raises(SessionIsNotInitializedError):
         with transaction_state_manager:
@@ -221,7 +229,9 @@ def test_commit_raises_session_is_not_initialized():
 
 
 def test_rollback_raises_session_is_not_initialized():
-    transaction_state_manager = TransactionStateManager(lambda: None)
+    transaction_state_manager = TransactionStateManager(
+        lambda: None  # type: ignore
+    )
 
     with pytest.raises(SessionIsNotInitializedError):
         with transaction_state_manager:
