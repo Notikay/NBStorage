@@ -14,7 +14,7 @@ from infrastructure.persistence.uow.exceptions import (
 )
 
 if TYPE_CHECKING:
-    from sqlalchemy.orm import Session, sessionmaker
+    from sqlalchemy.orm import Session
 
 
 class CardORMTestParams(TypedDict):
