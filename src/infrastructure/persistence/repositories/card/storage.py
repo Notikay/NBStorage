@@ -98,7 +98,7 @@ class CardStorage(CardRepositoryInterface[Card]):
             user_login=item.metadata.user_login,
             card_id=item.metadata.card_id,
             title=item.metadata.title,
-            icon_path=item.metadata.icon_path,
+            icon_path=str(item.metadata.icon_path),
             key=item.metadata.key,
             username=item.username,
             email=item.email,
@@ -138,7 +138,7 @@ class CardStorage(CardRepositoryInterface[Card]):
             )
             .values(
                 title=item.metadata.title,
-                icon_path=item.metadata.icon_path,
+                icon_path=str(item.metadata.icon_path),
                 username=item.username,
                 email=item.email,
                 password=item.password,
