@@ -3,7 +3,7 @@ from typing import TypedDict
 type CardDictParamType = str | None
 
 
-class MetaDataDTO(TypedDict):
+class CardMetaDTO(TypedDict):
     title: str
     icon_path: str
     user_login: str
@@ -11,7 +11,7 @@ class MetaDataDTO(TypedDict):
 
 
 class CardDTO(TypedDict):
-    metadata: MetaDataDTO
+    meta: CardMetaDTO
     username: CardDictParamType
     email: CardDictParamType
     password: CardDictParamType

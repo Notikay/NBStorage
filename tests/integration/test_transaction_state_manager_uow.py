@@ -1,17 +1,17 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING, TypedDict
 from uuid import UUID
+from typing import TYPE_CHECKING, TypedDict
 
 import pytest
 
-from domain.entities import Card, MetaData, User, Settings
-from infrastructure.persistence.models import CardORM, UserORM
-from infrastructure.persistence.uow import TransactionStateManager
 from infrastructure.persistence.uow.exceptions import (
-    SessionIsNotInitializedError
+    SessionNotInitializedError
 )
+from infrastructure.persistence.models import CardORM, UserORM
+from infrastructure.persistence.uow import TransactionManager
+from domain.entities import Card, CardMeta, User, UserMeta
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
@@ -66,12 +66,12 @@ USER_ORM_TEST_PARAMS: UserORMTestParams = {
 
 # === Позитивные тесты ===
 def test_commit_successfully(db_session: Session):
-    transaction_state_manager = TransactionStateManager(
+    transaction_state_manager = TransactionManager(
         lambda: db_session  # type: ignore
     )
 
     card = Card(
-        MetaData(
+        CardMeta(
             CARD_ORM_TEST_PARAMS['title'],
             Path(CARD_ORM_TEST_PARAMS['icon_path']),
             CARD_ORM_TEST_PARAMS['user_login'],
@@ -85,14 +85,14 @@ def test_commit_successfully(db_session: Session):
     )
 
     user = User(
-        Settings(
+        UserMeta(
             USER_ORM_TEST_PARAMS['name'],
             Path(USER_ORM_TEST_PARAMS['avatar_path']),
-            USER_ORM_TEST_PARAMS['time_block']
+            USER_ORM_TEST_PARAMS['time_block'],
+            USER_ORM_TEST_PARAMS['salt']
         ),
         USER_ORM_TEST_PARAMS['login'],
-        USER_ORM_TEST_PARAMS['password'],
-        USER_ORM_TEST_PARAMS['salt']
+        USER_ORM_TEST_PARAMS['password']
     )
 
     with transaction_state_manager:
@@ -116,12 +116,12 @@ def test_commit_successfully(db_session: Session):
 
 
 def test_rollback_successfully(db_session: Session):
-    transaction_state_manager = TransactionStateManager(
+    transaction_state_manager = TransactionManager(
         lambda: db_session  # type: ignore
     )
 
     card = Card(
-        MetaData(
+        CardMeta(
             CARD_ORM_TEST_PARAMS['title'],
             Path(CARD_ORM_TEST_PARAMS['icon_path']),
             CARD_ORM_TEST_PARAMS['user_login'],
@@ -135,14 +135,14 @@ def test_rollback_successfully(db_session: Session):
     )
 
     user = User(
-        Settings(
+        UserMeta(
             USER_ORM_TEST_PARAMS['name'],
             Path(USER_ORM_TEST_PARAMS['avatar_path']),
-            USER_ORM_TEST_PARAMS['time_block']
+            USER_ORM_TEST_PARAMS['time_block'],
+            USER_ORM_TEST_PARAMS['salt']
         ),
         USER_ORM_TEST_PARAMS['login'],
-        USER_ORM_TEST_PARAMS['password'],
-        USER_ORM_TEST_PARAMS['salt']
+        USER_ORM_TEST_PARAMS['password']
     )
 
     try:
@@ -170,12 +170,12 @@ def test_rollback_successfully(db_session: Session):
 
 
 def test_not_saved_when_commit_is_not_call(db_session: Session):
-    transaction_state_manager = TransactionStateManager(
+    transaction_state_manager = TransactionManager(
         lambda: db_session  # type: ignore
     )
 
     card = Card(
-        MetaData(
+        CardMeta(
             CARD_ORM_TEST_PARAMS['title'],
             Path(CARD_ORM_TEST_PARAMS['icon_path']),
             CARD_ORM_TEST_PARAMS['user_login'],
@@ -189,14 +189,14 @@ def test_not_saved_when_commit_is_not_call(db_session: Session):
     )
 
     user = User(
-        Settings(
+        UserMeta(
             USER_ORM_TEST_PARAMS['name'],
             Path(USER_ORM_TEST_PARAMS['avatar_path']),
-            USER_ORM_TEST_PARAMS['time_block']
+            USER_ORM_TEST_PARAMS['time_block'],
+            USER_ORM_TEST_PARAMS['salt']
         ),
         USER_ORM_TEST_PARAMS['login'],
         USER_ORM_TEST_PARAMS['password'],
-        USER_ORM_TEST_PARAMS['salt']
     )
 
     with transaction_state_manager:
@@ -219,20 +219,20 @@ def test_not_saved_when_commit_is_not_call(db_session: Session):
 
 # === Негативные тесты ===
 def test_commit_raises_session_is_not_initialized():
-    transaction_state_manager = TransactionStateManager(
+    transaction_state_manager = TransactionManager(
         lambda: None  # type: ignore
     )
 
-    with pytest.raises(SessionIsNotInitializedError):
+    with pytest.raises(SessionNotInitializedError):
         with transaction_state_manager:
             transaction_state_manager.commit()
 
 
 def test_rollback_raises_session_is_not_initialized():
-    transaction_state_manager = TransactionStateManager(
+    transaction_state_manager = TransactionManager(
         lambda: None  # type: ignore
     )
 
-    with pytest.raises(SessionIsNotInitializedError):
+    with pytest.raises(SessionNotInitializedError):
         with transaction_state_manager:
             transaction_state_manager.rollback()

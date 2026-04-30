@@ -1,3 +1,3 @@
-from .transaction_state_manager import TransactionStateManager
+from .transaction_manager import TransactionManager
 
-__all__ = ['TransactionStateManager']
+__all__ = ['TransactionManager']

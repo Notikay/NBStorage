@@ -5,28 +5,22 @@ from typing import TYPE_CHECKING
 from sqlalchemy import select, update, delete
 from sqlalchemy.exc import IntegrityError
 
-from domain.interfaces.units.card import CardRepositoryInterface
 from domain.entities import Card
+from domain.interfaces import CardRepositoryInterface
 from infrastructure.persistence.models import CardORM
 from .exceptions import CardCreateError, CardDeleteError, CardDeleteAllError
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
 
-    from domain.interfaces.units.card.card_types import (
-        MetaDataUserLoginType,
-        MetaDataCardIDType
+    from domain.interfaces.card.types import (
+        CardMetaUserLoginType,
+        CardMetaCardIDType
     )
 
 
 class CardStorage(CardRepositoryInterface[Card]):
-    """
-    Хранилище карточек пользователей.
-
-    :ivar __session: Атрибут сессии подключения к хранилищу
-                     карточек пользователя.
-    :type __session: Session
-    """
+    """Хранилище карточек пользователей."""
 
     def __init__(self, session: Session):
         """
@@ -40,21 +34,28 @@ class CardStorage(CardRepositoryInterface[Card]):
 
     @property
     def session(self) -> Session:
+        """
+        Сессия подключения к хранилищу.
+
+        Только для чтения.
+
+        :rtype: Session
+        """
         return self.__session
 
     def get_item(
             self,
-            user_login: MetaDataUserLoginType,
-            card_id: MetaDataCardIDType
+            user_login: CardMetaUserLoginType,
+            card_id: CardMetaCardIDType
     ) -> Card | None:
         """
         Получение карточки пользователя из хранилища.
 
         :param user_login: Логин пользователя.
-        :type user_login: MetaDataUserLoginType
+        :type user_login: CardMetaUserLoginType
 
         :param card_id: ID карточки пользователя.
-        :type card_id: MetaDataCardIDType
+        :type card_id: CardMetaCardIDType
 
         :return: Карточка пользователя из хранилища.
         :rtype: Card | None
@@ -64,12 +65,12 @@ class CardStorage(CardRepositoryInterface[Card]):
 
         return card
 
-    def get_all_items(self, user_login: MetaDataUserLoginType) -> list[Card]:
+    def get_all_items(self, user_login: CardMetaUserLoginType) -> list[Card]:
         """
         Получение всех карточек пользователя из хранилища.
 
         :param user_login: Логин пользователя.
-        :type user_login: MetaDataUserLoginType
+        :type user_login: CardMetaUserLoginType
 
         :return: Все карточки пользователя из хранилища.
         :rtype: list[Card]
@@ -95,11 +96,11 @@ class CardStorage(CardRepositoryInterface[Card]):
                                  пользователя.
         """
         card_orm = CardORM(
-            user_login=item.metadata.user_login,
-            card_id=item.metadata.card_id,
-            title=item.metadata.title,
-            icon_path=str(item.metadata.icon_path),
-            key=item.metadata.key,
+            user_login=item.meta.user_login,
+            card_id=item.meta.card_id,
+            title=item.meta.title,
+            icon_path=str(item.meta.icon_path),
+            key=item.meta.key,
             username=item.username,
             email=item.email,
             password=item.password,
@@ -111,10 +112,7 @@ class CardStorage(CardRepositoryInterface[Card]):
         try:
             self.__session.flush()
         except IntegrityError:
-            raise CardCreateError(
-                item.metadata.user_login,
-                item.metadata.card_id
-            )
+            raise CardCreateError(item.meta.user_login, item.meta.card_id)
 
         card = card_orm.to_item()
 
@@ -133,12 +131,12 @@ class CardStorage(CardRepositoryInterface[Card]):
         stmt = (
             update(CardORM)
             .where(
-                CardORM.user_login == item.metadata.user_login,
-                CardORM.card_id == item.metadata.card_id
+                CardORM.user_login == item.meta.user_login,
+                CardORM.card_id == item.meta.card_id
             )
             .values(
-                title=item.metadata.title,
-                icon_path=str(item.metadata.icon_path),
+                title=item.meta.title,
+                icon_path=str(item.meta.icon_path),
                 username=item.username,
                 email=item.email,
                 password=item.password,
@@ -153,17 +151,17 @@ class CardStorage(CardRepositoryInterface[Card]):
         return card
 
     def del_item(self,
-            user_login: MetaDataUserLoginType,
-            card_id: MetaDataCardIDType
+            user_login: CardMetaUserLoginType,
+            card_id: CardMetaCardIDType
     ) -> None:
         """
         Удаление карточки пользователя из хранилища.
 
         :param user_login: Логин пользователя.
-        :type user_login: MetaDataUserLoginType
+        :type user_login: CardMetaUserLoginType
 
         :param card_id: ID карточки пользователя.
-        :type card_id: MetaDataCardIDType
+        :type card_id: CardMetaCardIDType
 
         :raises CardDeleteError: Если не удалось удалить карточку
                                  пользователя.
@@ -179,12 +177,12 @@ class CardStorage(CardRepositoryInterface[Card]):
         except IntegrityError:
             raise CardDeleteError(user_login, card_id)
 
-    def del_all_items(self, user_login: MetaDataUserLoginType) -> None:
+    def del_all_items(self, user_login: CardMetaUserLoginType) -> None:
         """
         Удаление всех карточек пользователя из хранилища.
 
         :param user_login: Логин пользователя.
-        :type user_login: MetaDataUserLoginType
+        :type user_login: CardMetaUserLoginType
 
         :raises CardDeleteAllError: Если не удалось удалить все
                                     карточки пользователя.

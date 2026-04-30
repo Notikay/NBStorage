@@ -2,26 +2,21 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from domain.interfaces.units.user import ChooseAllUsersUseCaseInterface
 from domain.entities import User
+from domain.interfaces import ChooseAllUsersUseCaseInterface
 
 if TYPE_CHECKING:
-    from domain.interfaces.units.user import UserUnitOfWorkInterface
+    from domain.interfaces import UserUnitOfWorkInterface
 
 
 class ChooseAllUsers(ChooseAllUsersUseCaseInterface[User]):
-    """
-    Получение всех пользователей.
-
-    :ivar __uow: Атрибут менеджера состояния транзакции пользователя.
-    :type __uow: UserUnitOfWorkInterface
-    """
+    """Получение всех пользователей."""
 
     def __init__(self, uow: UserUnitOfWorkInterface[User]):
         """
         Инициализация получения карточки пользователя.
 
-        :param uow: Менеджер состояния транзакции пользователя.
+        :param uow: Менеджер управления транзакцией пользователя.
         :type uow: UserUnitOfWorkInterface
         """
         self.__uow = uow
@@ -34,7 +29,7 @@ class ChooseAllUsers(ChooseAllUsersUseCaseInterface[User]):
         :rtype: list[User]
         """
         with self.__uow:
-            users = self.__uow.user_repos.get_all_items()
+            users = list(self.__uow.user_repos.get_all_items())
             self.__uow.commit()
 
             return users

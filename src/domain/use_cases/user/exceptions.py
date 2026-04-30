@@ -2,19 +2,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, override
 
-from domain.interfaces.units.user.exceptions import UserUseCaseError
+from domain.interfaces import UserNotFoundErrorInterface
 
 if TYPE_CHECKING:
-    from domain.interfaces.units.user.user_types import UserLoginType
+    from domain.interfaces.user.types import UserLoginType, UserMessageType
 
 
-class UserNotFoundError(UserUseCaseError):
-    """
-    Ошибка при поиске пользователя.
-
-    :ivar login: Атрибут логина пользователя.
-    :type login: UserLoginType
-    """
+class UserNotFoundError(UserNotFoundErrorInterface):
+    """Ошибка при не найденном пользователе."""
 
     def __init__(self, login: UserLoginType):
         """
@@ -23,9 +18,15 @@ class UserNotFoundError(UserUseCaseError):
         :param login: Логин пользователя.
         :type login: UserLoginType
         """
-        self.login = login
+        self.__login = login
 
     @override
     @property
-    def message(self) -> str:
-        return f"Пользователь не найден! -> {self.login}"
+    def message(self) -> UserMessageType:
+        """
+        Сообщение об ошибке.
+
+        :return: Текст ошибки.
+        :rtype: UserMessageType
+        """
+        return f"Пользователь не найден! -> {self.__login}"

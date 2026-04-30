@@ -2,104 +2,105 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, override
 
-from domain.interfaces.units.card.exceptions import CardRepositoryError
+from domain.interfaces import (
+    CreateCardErrorInterface,
+    DeleteCardErrorInterface
+)
 
 if TYPE_CHECKING:
-    from domain.interfaces.units.card.card_types import (
-        MetaDataUserLoginType,
-        MetaDataCardIDType
+    from domain.interfaces.card.types import (
+        CardMetaUserLoginType,
+        CardMetaCardIDType,
+        CardMessageType
     )
 
 
-class CardCreateError(CardRepositoryError):
-    """
-    Ошибка создания карточки пользователя в хранилище.
-
-    :ivar user_login: Атрибут логина пользователя.
-    :type user_login: MetaDataUserLoginType
-
-    :ivar card_id: Атрибут ID карточки пользователя.
-    :type card_id: MetaDataCardIDType
-    """
+class CardCreateError(CreateCardErrorInterface):
+    """Ошибка при создании карточки пользователя в хранилище."""
 
     def __init__(
             self,
-            user_login: MetaDataUserLoginType,
-            card_id: MetaDataCardIDType
+            user_login: CardMetaUserLoginType,
+            card_id: CardMetaCardIDType
     ):
         """
         Инициализация ошибки.
 
         :param user_login: Логин пользователя.
-        :type user_login: MetaDataUserLoginType
+        :type user_login: CardMetaUserLoginType
 
         :param card_id: ID карточки пользователя.
-        :type card_id: MetaDataCardIDType
+        :type card_id: CardMetaCardIDType
         """
-        self.user_login = user_login
-        self.card_id = card_id
+        self.__user_login = user_login
+        self.__card_id = card_id
 
     @override
     @property
-    def message(self) -> str:
+    def message(self) -> CardMessageType:
+        """
+        Сообщение об ошибке.
+
+        :return: Текст ошибки.
+        :rtype: CardMessageType
+        """
         return ("Ошибка создания карточки пользователя в хранилище! -> "
-                f"{self.card_id} ({self.user_login})")
+                f"{self.__card_id} ({self.__user_login})")
 
 
-class CardDeleteError(CardRepositoryError):
-    """
-    Ошибка удаления карточки пользователя из хранилища.
-
-    :ivar user_login: Атрибут логина пользователя.
-    :type user_login: MetaDataUserLoginType
-
-    :ivar card_id: Атрибут ID карточки пользователя.
-    :type card_id: MetaDataCardIDType
-    """
+class CardDeleteError(DeleteCardErrorInterface):
+    """Ошибка удаления карточки пользователя из хранилища."""
 
     def __init__(
             self,
-            user_login: MetaDataUserLoginType,
-            card_id: MetaDataCardIDType
+            user_login: CardMetaUserLoginType,
+            card_id: CardMetaCardIDType
     ):
         """
         Инициализация ошибки.
 
         :param user_login: Логин пользователя.
-        :type user_login: MetaDataUserLoginType
+        :type user_login: CardMetaUserLoginType
 
         :param card_id: ID карточки пользователя.
-        :type card_id: MetaDataCardIDType
+        :type card_id: CardMetaCardIDType
         """
-        self.user_login = user_login
-        self.card_id = card_id
+        self.__user_login = user_login
+        self.__card_id = card_id
 
     @override
     @property
-    def message(self) -> str:
+    def message(self) -> CardMessageType:
+        """
+        Сообщение об ошибке.
+
+        :return: Текст ошибки.
+        :rtype: CardMessageType
+        """
         return ("Ошибка удаления карточки пользователя из хранилища! -> "
-                f"{self.card_id} ({self.user_login})")
+                f"{self.__card_id} ({self.__user_login})")
 
 
-class CardDeleteAllError(CardRepositoryError):
-    """
-    Ошибка удаления всех карточек пользователя из хранилища.
+class CardDeleteAllError(DeleteCardErrorInterface):
+    """Ошибка удаления всех карточек пользователя из хранилища."""
 
-    :ivar user_login: Атрибут логина пользователя.
-    :type user_login: MetaDataUserLoginType
-    """
-
-    def __init__(self, user_login: MetaDataUserLoginType):
+    def __init__(self, user_login: CardMetaUserLoginType):
         """
         Инициализация ошибки.
 
         :param user_login: Логин пользователя.
-        :type user_login: MetaDataUserLoginType
+        :type user_login: CardMetaUserLoginType
         """
-        self.user_login = user_login
+        self.__user_login = user_login
 
     @override
     @property
-    def message(self) -> str:
+    def message(self) -> CardMessageType:
+        """
+        Сообщение об ошибке.
+
+        :return: Текст ошибки.
+        :rtype: CardMessageType
+        """
         return ("Ошибка удаления всех карточек пользователя из хранилища! -> "
-                f"{self.user_login}")
+                f"{self.__user_login}")

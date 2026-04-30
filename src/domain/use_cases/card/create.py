@@ -2,42 +2,37 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from domain.entities import Card, MetaData
-from domain.interfaces.units.card import CreateCardUseCaseInterface
+from domain.entities import Card, CardMeta
+from domain.interfaces import CreateCardUseCaseInterface
 
 if TYPE_CHECKING:
-    from domain.interfaces.units.card import CardUnitOfWorkInterface
-    from domain.interfaces.units.card.card_types import (
-        MetaDataUserLoginType,
-        MetaDataTitleType,
-        MetaDataIconPathType,
+    from domain.interfaces import CardUnitOfWorkInterface
+    from domain.interfaces.card.types import (
+        CardMetaUserLoginType,
+        CardMetaTitleType,
+        CardMetaIconPathType,
         CardParamType
     )
 
 
 class CreateCard(CreateCardUseCaseInterface[Card]):
-    """
-    Создание карточки пользователя.
-
-    :ivar __uow: Атрибут менеджера состояния транзакции карточки
-                 пользователя.
-    :type __uow: CardUnitOfWorkInterface
-    """
+    """Создание карточки пользователя."""
 
     def __init__(self, uow: CardUnitOfWorkInterface[Card]):
         """
         Инициализация получения карточки пользователя.
 
-        :param uow: Менеджер состояния транзакции карточки пользователя.
+        :param uow: Менеджер управления транзакцией карточки
+                    пользователя.
         :type uow: CardUnitOfWorkInterface
         """
         self.__uow = uow
 
     def execute(
             self,
-            user_login: MetaDataUserLoginType,
-            title: MetaDataTitleType,
-            icon_path: MetaDataIconPathType,
+            user_login: CardMetaUserLoginType,
+            title: CardMetaTitleType,
+            icon_path: CardMetaIconPathType,
             username: CardParamType,
             email: CardParamType,
             password: CardParamType,
@@ -52,13 +47,13 @@ class CreateCard(CreateCardUseCaseInterface[Card]):
         Сохранение карточки пользователя в хранилище.
 
         :param user_login: Логин пользователя.
-        :type user_login: MetaDataUserLoginType
+        :type user_login: CardMetaUserLoginType
 
         :param title: Название карточки пользователя.
-        :type title: MetaDataTitleType
+        :type title: CardMetaTitleType
 
         :param icon_path: Путь к иконке карточки пользователя.
-        :type icon_path: MetaDataIconPathType
+        :type icon_path: CardMetaIconPathType
 
         :param username: Имя пользователя от сервиса.
         :type username: CardParamType
@@ -80,7 +75,7 @@ class CreateCard(CreateCardUseCaseInterface[Card]):
         """
         with self.__uow:
             card = Card(
-                MetaData(title, icon_path, user_login),
+                CardMeta(title, icon_path, user_login),
                 username,
                 email,
                 password,

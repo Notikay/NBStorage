@@ -5,25 +5,19 @@ from typing import TYPE_CHECKING
 from sqlalchemy import select, update, delete
 from sqlalchemy.exc import IntegrityError
 
-from domain.interfaces.units.user import UserRepositoryInterface
 from domain.entities import User
+from domain.interfaces import UserRepositoryInterface
 from infrastructure.persistence.models import UserORM
 from .exceptions import UserCreateError, UserDeleteError, UserDeleteAllError
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
 
-    from domain.interfaces.units.user.user_types import UserLoginType
+    from domain.interfaces.user.types import UserLoginType
 
 
 class UserStorage(UserRepositoryInterface[User]):
-    """
-    Хранилище пользователей.
-
-    :ivar __session: Атрибут сессии подключения к хранилищу
-                     пользователя.
-    :type __session: Session
-    """
+    """Хранилище пользователей."""
 
     def __init__(self, session: Session):
         """
@@ -36,6 +30,13 @@ class UserStorage(UserRepositoryInterface[User]):
 
     @property
     def session(self) -> Session:
+        """
+        Сессия подключения к хранилищу.
+
+        Только для чтения.
+
+        :rtype: Session
+        """
         return self.__session
 
     def get_item(self, login: UserLoginType) -> User | None:
@@ -81,11 +82,11 @@ class UserStorage(UserRepositoryInterface[User]):
         """
         user_orm = UserORM(
             login=item.login,
-            name=item.settings.name,
-            avatar_path=str(item.settings.avatar_path),
-            time_block=item.settings.time_block,
-            password=item.password,
-            salt=item.salt
+            name=item.meta.name,
+            avatar_path=str(item.meta.avatar_path),
+            time_block=item.meta.time_block,
+            salt=item.meta.salt,
+            password=item.password
         )
         self.__session.add(user_orm)
 
@@ -112,9 +113,9 @@ class UserStorage(UserRepositoryInterface[User]):
             update(UserORM)
             .where(UserORM.login == item.login)
             .values(
-                name=item.settings.name,
-                avatar_path=str(item.settings.avatar_path),
-                time_block=item.settings.time_block,
+                name=item.meta.name,
+                avatar_path=str(item.meta.avatar_path),
+                time_block=item.meta.time_block,
                 password=item.password
             )
             .returning(UserORM)

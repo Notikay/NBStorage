@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from domain.entities import Card, MetaData
+from domain.entities import Card, CardMeta
 from .base import Base
 
 if TYPE_CHECKING:
@@ -40,7 +40,7 @@ class CardORM(Base):
 
     def to_item(self):
         return Card(
-            MetaData(
+            CardMeta(
                 self.title,
                 Path(self.icon_path),
                 self.user_login,

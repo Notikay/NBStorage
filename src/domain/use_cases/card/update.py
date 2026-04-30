@@ -2,41 +2,36 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from domain.interfaces.units.card import UpdateCardUseCaseInterface
 from domain.entities import Card
+from domain.interfaces import UpdateCardUseCaseInterface
 from .exceptions import CardNotFoundError
 
 if TYPE_CHECKING:
-    from domain.interfaces.units.card import CardUnitOfWorkInterface
-    from domain.interfaces.units.card.card_types import (
-        MetaDataUserLoginType,
-        MetaDataCardIDType,
+    from domain.interfaces import CardUnitOfWorkInterface
+    from domain.interfaces.card.types import (
+        CardMetaUserLoginType,
+        CardMetaCardIDType,
         CardUpdParamType,
     )
 
 
 class UpdateCard(UpdateCardUseCaseInterface[Card]):
-    """
-    Обновление карточки пользователя.
-
-    :ivar __uow: Атрибут менеджера состояния транзакции карточки
-                 пользователя.
-    :type __uow: CardUnitOfWorkInterface
-    """
+    """Обновление карточки пользователя."""
 
     def __init__(self, uow: CardUnitOfWorkInterface[Card]):
         """
         Инициализация получения карточки пользователя.
 
-        :param uow: Менеджер состояния транзакции карточки пользователя.
+        :param uow: Менеджер управления транзакцией карточки
+                    пользователя.
         :type uow: CardUnitOfWorkInterface
         """
         self.__uow = uow
 
     def execute(
             self,
-            user_login: MetaDataUserLoginType,
-            card_id: MetaDataCardIDType,
+            user_login: CardMetaUserLoginType,
+            card_id: CardMetaCardIDType,
             username: CardUpdParamType,
             email: CardUpdParamType,
             password: CardUpdParamType,
@@ -53,10 +48,10 @@ class UpdateCard(UpdateCardUseCaseInterface[Card]):
         Сохранение карточки пользователя в хранилище.
 
         :param user_login: Логин пользователя.
-        :type user_login: MetaDataUserLoginType
+        :type user_login: CardMetaUserLoginType
 
         :param card_id: ID карточки пользователя.
-        :type card_id: MetaDataCardIDType
+        :type card_id: CardMetaCardIDType
 
         :param username: Имя пользователя от сервиса.
         :type username: CardUpdParamType
@@ -92,11 +87,11 @@ class UpdateCard(UpdateCardUseCaseInterface[Card]):
             card.description = description
             card.encrypt()
 
-            card = self.__uow.card_repos.upd_item(card)
-            if card is None:
+            upd_card: Card | None = self.__uow.card_repos.upd_item(card)
+            if upd_card is None:
                 raise CardNotFoundError(user_login, card_id)
-            card.decrypt()
+            upd_card.decrypt()
 
             self.__uow.commit()
 
-            return card
+            return upd_card

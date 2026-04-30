@@ -8,7 +8,7 @@ import pytest
 
 from infrastructure.persistence.models import CardORM
 from infrastructure.persistence.repositories import CardStorage
-from domain.entities import MetaData, Card
+from domain.entities import Card, CardMeta
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
@@ -25,7 +25,6 @@ class CardORMTestParams(TypedDict):
     password: bytes
     url: bytes
     description: bytes
-
 
 CARD_ORM_TEST_PARAMS: CardORMTestParams = {
     'user_login': 'test_user_login',
@@ -48,7 +47,7 @@ def card_orm() -> CardORM:
 @pytest.fixture
 def card() -> Card:
     card = Card(
-        MetaData(
+        CardMeta(
             CARD_ORM_TEST_PARAMS['title'],
             Path(CARD_ORM_TEST_PARAMS['icon_path']),
             CARD_ORM_TEST_PARAMS['user_login'],
@@ -92,15 +91,15 @@ def test_get_item_successfully_already_exists(
     if result is None:
         pytest.fail("Карточки пользователя нет в хранилище!")
 
-    assert result.metadata.card_id == card_id, \
+    assert result.meta.card_id == card_id, \
         "Неверный ID карточки пользователя!"
-    assert result.metadata.user_login == user_login, \
+    assert result.meta.user_login == user_login, \
         "Неверный логин в карточке пользователя!"
-    assert result.metadata.title == title, \
+    assert result.meta.title == title, \
         "Неверное название карточки пользователя!"
-    assert result.metadata.icon_path == icon_path, \
+    assert result.meta.icon_path == icon_path, \
         "Неверный путь к иконке карточки пользователя!"
-    assert result.metadata.key == key, \
+    assert result.meta.key == key, \
         "Неверный ключ шифрования для данных карточек пользователя!"
     assert result.username == username, \
         "Неверное имя пользователя от сервиса в карточке пользователя!"
@@ -163,15 +162,15 @@ def test_get_all_items_successfully_already_exists(
         url = test_params['url']
         description = test_params['description']
 
-        assert res.metadata.card_id == card_id, \
+        assert res.meta.card_id == card_id, \
             f"Неверный ID в {num} карточке пользователя!"
-        assert res.metadata.user_login == user_login, \
+        assert res.meta.user_login == user_login, \
             f"Неверный логин в {num} карточке пользователя!"
-        assert res.metadata.title == title, \
+        assert res.meta.title == title, \
             f"Неверное название в {num} карточке пользователя!"
-        assert res.metadata.icon_path == icon_path, \
+        assert res.meta.icon_path == icon_path, \
             f"Неверный путь к иконке в {num} карточке пользователя!"
-        assert res.metadata.key == key, \
+        assert res.meta.key == key, \
             "Неверный ключ шифрования для данных карточек пользователя!"
         assert res.username == username, (
             f"Неверное имя пользователя от сервиса в {num} карточке "
@@ -215,15 +214,15 @@ def test_set_item_successfully_already_exists(
     card_storage = CardStorage(db_session)
     result = card_storage.set_item(card)
 
-    assert result.metadata.card_id == card_id, \
+    assert result.meta.card_id == card_id, \
         "Неверный ID карточки пользователя!"
-    assert result.metadata.user_login == user_login, \
+    assert result.meta.user_login == user_login, \
         "Неверный логин в карточке пользователя!"
-    assert result.metadata.title == title, \
+    assert result.meta.title == title, \
         "Неверное название карточки пользователя!"
-    assert result.metadata.icon_path == icon_path, \
+    assert result.meta.icon_path == icon_path, \
         "Неверный путь к иконке карточки пользователя!"
-    assert result.metadata.key == key, \
+    assert result.meta.key == key, \
         "Неверный ключ шифрования для данных карточек пользователя!"
     assert result.username == username, \
         "Неверное имя пользователя от сервиса в карточке пользователя!"
@@ -256,7 +255,7 @@ def test_upd_item_successfully_already_exists(
     new_username = b'\x18\xe8\xebR8B\xb2\x9c\x9c\xaa\xb8\xc7)\x9b'
     new_email = b''
 
-    card.metadata.title = new_title
+    card.meta.title = new_title
     card.username = new_username
     card.email = new_email
 
@@ -266,15 +265,15 @@ def test_upd_item_successfully_already_exists(
     if result is None:
         pytest.fail("Карточки пользователя нет в хранилище!")
 
-    assert result.metadata.card_id == card_id, \
+    assert result.meta.card_id == card_id, \
         "Неверный ID карточки пользователя!"
-    assert result.metadata.user_login == user_login, \
+    assert result.meta.user_login == user_login, \
         "Неверный логин в карточке пользователя!"
-    assert result.metadata.title == new_title, \
+    assert result.meta.title == new_title, \
         "Неверное название карточки пользователя!"
-    assert result.metadata.icon_path == icon_path, \
+    assert result.meta.icon_path == icon_path, \
         "Неверный путь к иконке карточки пользователя!"
-    assert result.metadata.key == key, \
+    assert result.meta.key == key, \
         "Неверный ключ шифрования для данных карточек пользователя!"
     assert result.username == new_username, \
         "Неверное имя пользователя от сервиса в карточке пользователя!"

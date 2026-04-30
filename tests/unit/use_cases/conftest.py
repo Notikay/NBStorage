@@ -4,9 +4,9 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from domain.entities import MetaData, Card, Settings, User
-from domain.interfaces.units.card import CardUnitOfWorkInterface
-from domain.interfaces.units.user import UserUnitOfWorkInterface
+from domain.entities import CardMeta, Card, UserMeta, User
+from domain.interfaces import CardUnitOfWorkInterface
+from domain.interfaces import UserUnitOfWorkInterface
 
 if TYPE_CHECKING:
     from pytest import FixtureRequest
@@ -16,13 +16,10 @@ if TYPE_CHECKING:
     from tests.unit.use_cases.test_user_use_cases import TestUser
 
 
-def _get_test_params(
-        req_cls,
-        addl_params_name: str,
-        params_name: str
-):
+def _get_test_params(req_cls, addl_params_name: str, params_name: str):
     addl_test_params = getattr(req_cls, addl_params_name, None)
     test_params = getattr(req_cls, params_name, None)
+
     if (addl_test_params is None) or (test_params is None):
         pytest.fail(
             f"Класс тестов {req_cls.__name__} не имеет атрибута "
@@ -39,25 +36,25 @@ def _get_test_params(
     return addl_test_params, test_params
 
 def _create_card(req_cls: TestCard):
-    metadata_test_params, card_test_params = _get_test_params(
+    meta_test_params, card_test_params = _get_test_params(
         req_cls,
-        'METADATA_TEST_PARAMS',
+        'META_TEST_PARAMS',
         'CARD_TEST_PARAMS'
     )
 
-    card = Card(MetaData(*metadata_test_params), *card_test_params)
+    card = Card(CardMeta(*meta_test_params), *card_test_params)
     card.encrypt()
 
     return card
 
 def _create_user(req_cls: TestUser):
-    settings_test_params, user_test_params = _get_test_params(
+    meta_test_params, user_test_params = _get_test_params(
         req_cls,
-        'SETTINGS_TEST_PARAMS',
+        'META_TEST_PARAMS',
         'USER_TEST_PARAMS'
     )
 
-    user = User(Settings(*settings_test_params), *user_test_params)
+    user = User(UserMeta(*meta_test_params), *user_test_params)
     user.hash_password()
 
     return user
@@ -72,18 +69,18 @@ def another_card(request: FixtureRequest) -> Card:
 
 @pytest.fixture
 def card_upd(request: FixtureRequest, card: Card) -> Card:
-    upd_metadata_test_params, upd_card_test_params = _get_test_params(
+    upd_meta_test_params, upd_card_test_params = _get_test_params(
         request.cls,
-        'UPD_METADATA_TEST_PARAMS',
+        'UPD_META_TEST_PARAMS',
         'UPD_CARD_TEST_PARAMS'
     )
 
     upd_card = Card(
-        MetaData(
-            card.metadata.title,
-            card.metadata.icon_path,
-            card.metadata.user_login,
-            card.metadata.key
+        CardMeta(
+            card.meta.title,
+            card.meta.icon_path,
+            card.meta.user_login,
+            card.meta.key
         ),
         card.username,
         card.email,
@@ -92,10 +89,7 @@ def card_upd(request: FixtureRequest, card: Card) -> Card:
         card.description
     )
 
-    (
-        upd_card.metadata.title,
-        upd_card.metadata.icon_path
-    ) = upd_metadata_test_params
+    upd_card.meta.title, upd_card.meta.icon_path = upd_meta_test_params
     (
         upd_card.username,
         upd_card.email,
@@ -136,27 +130,23 @@ def another_user(request: FixtureRequest) -> User:
 
 @pytest.fixture
 def user_upd(request: FixtureRequest, user: User) -> User:
-    upd_settings_test_params, upd_user_test_params = _get_test_params(
+    upd_meta_test_params, upd_user_test_params = _get_test_params(
         request.cls,
-        'UPD_SETTINGS_TEST_PARAMS',
+        'UPD_META_TEST_PARAMS',
         'UPD_USER_TEST_PARAMS'
     )
 
     upd_user = User(
-        Settings(
-            user.settings.name,
-            user.settings.avatar_path,
-            user.settings.time_block
-        ),
+        UserMeta(user.meta.name, user.meta.avatar_path, user.meta.time_block),
         user.login,
         user.password
     )
 
     (
-        upd_user.settings.name,
-        upd_user.settings.avatar_path,
-        upd_user.settings.time_block
-    ) = upd_settings_test_params
+        upd_user.meta.name,
+        upd_user.meta.avatar_path,
+        upd_user.meta.time_block
+    ) = upd_meta_test_params
     upd_user.password = upd_user_test_params[0]
 
     upd_user.hash_password()

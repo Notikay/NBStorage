@@ -2,136 +2,102 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, override
 
-from domain.interfaces.units.card.exceptions import CardEntityError
+from domain.interfaces import CardInvalidErrorInterface
 
 if TYPE_CHECKING:
-    from domain.interfaces.units.card.card_types import (
-        MetaDataTitleType,
-        MetaDataIconPathType,
-        MetaDataUserLoginType,
+    from domain.interfaces.card.types import (
+        CardMetaTitleType,
+        CardMessageType,
+        CardMetaIconPathType,
+        CardMetaUserLoginType,
         CardParamType
     )
 
 
-class MetaDataInvalidTitleError(CardEntityError):
+class CardMetaInvalidTitleError(CardInvalidErrorInterface):
     """
     Ошибка метаданных карточки пользователя, при некорректном названии.
-
-    :ivar title: Атрибут названия карточки пользователя.
-    :type title: MetaDataTitleType
-
-    :ivar msg: Атрибут подробного описания ошибки.
-    :type msg: str | None
     """
 
-    def __init__(self, title: MetaDataTitleType, msg: str | None = None):
+    def __init__(self, title: CardMetaTitleType):
         """
         Инициализация ошибки.
 
         :param title: Название карточки пользователя.
-        :type title: MetaDataTitleType
-
-        :param msg: Подробное описание ошибки.
-        :type msg: str | None
+        :type title: CardMetaTitleType
         """
-        self.title = title
-        self.msg = msg
+        self.__title = title
 
     @override
     @property
-    def message(self) -> str:
-        if self.msg:
-            return f"{self.msg} -> {self.title}"
-        return f"Некорректное название карточки пользователя! -> {self.title}"
+    def message(self) -> CardMessageType:
+        """
+        Сообщение об ошибке.
+
+        :return: Текст ошибки.
+        :rtype: CardMessageType
+        """
+        return ("Некорректное название карточки пользователя! -> "
+                f"{self.__title}")
 
 
-class MetaDataInvalidIconPathError(CardEntityError):
+class CardMetaInvalidIconPathError(CardInvalidErrorInterface):
     """
     Ошибка метаданных карточки пользователя, при некорректном пути к
     иконке.
-
-    :ivar icon_path: Атрибут пути к иконке карточки пользователя.
-    :type icon_path: MetaDataIconPathType
-
-    :ivar msg: Атрибут подробного описания ошибки.
-    :type msg: str | None
     """
 
-    def __init__(
-            self,
-            icon_path: MetaDataIconPathType,
-            msg: str | None = None
-    ):
+    def __init__(self, icon_path: CardMetaIconPathType):
         """
         Инициализация ошибки.
 
         :param icon_path: Путь к иконке карточки пользователя.
-        :type icon_path: MetaDataIconPathType
-
-        :param msg: Подробное описание ошибки.
-        :type msg: str | None
+        :type icon_path: CardMetaIconPathType
         """
-        self.icon_path = icon_path
-        self.msg = msg
+        self.__icon_path = icon_path
 
     @override
     @property
-    def message(self) -> str:
-        if self.msg:
-            return f"{self.msg} -> {self.icon_path}"
+    def message(self) -> CardMessageType:
+        """
+        Сообщение об ошибке.
+
+        :return: Текст ошибки.
+        :rtype: CardMessageType
+        """
         return ("Некорректный путь к иконке карточки пользователя! -> "
-                f"{self.icon_path}")
+                f"{self.__icon_path}")
 
 
-class MetaDataInvalidUserLoginError(CardEntityError):
+class CardMetaInvalidUserLoginError(CardInvalidErrorInterface):
     """
     Ошибка метаданных карточки пользователя, при некорректном логине.
-
-    :ivar user_login: Атрибут логина пользователя.
-    :type user_login: MetaDataUserLoginType
-
-    :ivar msg: Атрибут подробного описания ошибки.
-    :type msg: str | None
     """
 
-    def __init__(
-            self,
-            user_login: MetaDataUserLoginType,
-            msg: str | None = None
-    ):
+    def __init__(self, user_login: CardMetaUserLoginType):
         """
         Инициализация ошибки.
 
         :param user_login: Логин пользователя.
-        :type user_login: MetaDataUserLoginType
-
-        :param msg: Подробное описание ошибки.
-        :type msg: str | None
+        :type user_login: CardMetaUserLoginType
         """
-        self.user_login = user_login
-        self.msg = msg
+        self.__user_login = user_login
 
     @override
     @property
-    def message(self) -> str:
-        if self.msg:
-            return f"{self.msg} -> {self.user_login}"
-        return f"Некорректный логин пользователя! -> {self.user_login}"
+    def message(self) -> CardMessageType:
+        """
+        Сообщение об ошибке.
+
+        :return: Текст ошибки.
+        :rtype: CardMessageType
+        """
+        return f"Некорректный логин пользователя! -> {self.__user_login}"
 
 
-class CardInvalidParamFieldError(CardEntityError):
+class CardInvalidParamError(CardInvalidErrorInterface):
     """
     Ошибка карточки пользователя, при некорректном значении параметра.
-
-    :ivar param: Атрибут значения параметра в карточке пользователя.
-    :type param: CardParamType
-
-    :ivar param_name: Атрибут названия параметра в карточке
-                      пользователя.
-    :type param_name: str
-
-    :ivar msg: Атрибут подробного описания ошибки.
-    :type msg: str | None
     """
 
     def __init__(
@@ -152,14 +118,20 @@ class CardInvalidParamFieldError(CardEntityError):
         :param msg: Подробное описание ошибки.
         :type msg: str | None
         """
-        self.param = param
-        self.param_name = param_name
-        self.msg = msg
+        self.__param = param
+        self.__param_name = param_name
+        self.__msg = msg
 
     @override
     @property
-    def message(self) -> str:
-        if self.msg:
-            return f"{self.msg} -> {self.param_name}: {self.param!r}"
+    def message(self) -> CardMessageType:
+        """
+        Сообщение об ошибке.
+
+        :return: Текст ошибки.
+        :rtype: CardMessageType
+        """
+        if self.__msg:
+            return f"{self.__msg} -> {self.__param_name}: {self.__param!r}"
         return ("Некорректное значение параметра в карточке пользователя! -> "
-                f"{self.param_name}: {self.param!r}")
+                f"{self.__param_name}: {self.__param!r}")

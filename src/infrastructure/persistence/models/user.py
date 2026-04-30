@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from domain.entities import User, Settings
+from domain.entities import User, UserMeta
 from .base import Base
 
 if TYPE_CHECKING:
@@ -24,8 +24,8 @@ class UserORM(Base):
     name: Mapped[str] = mapped_column(nullable=False)
     avatar_path: Mapped[str] = mapped_column(nullable=False)
     time_block: Mapped[int] = mapped_column(nullable=False)
-    password: Mapped[bytes] = mapped_column(nullable=False)
     salt: Mapped[bytes] = mapped_column(nullable=False)
+    password: Mapped[bytes] = mapped_column(nullable=False)
 
     cards: Mapped[list[CardORM]] = relationship(
         back_populates='owner',
@@ -34,14 +34,14 @@ class UserORM(Base):
 
     def to_item(self):
         return User(
-            Settings(
+            UserMeta(
                 self.name,
                 Path(self.avatar_path),
-                self.time_block
+                self.time_block,
+                self.salt
             ),
             self.login,
-            self.password,
-            self.salt
+            self.password
         )
 
     def __repr__(self) -> str:

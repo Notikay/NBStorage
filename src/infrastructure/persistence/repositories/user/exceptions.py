@@ -2,19 +2,17 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, override
 
-from domain.interfaces.units.user.exceptions import UserRepositoryError
+from domain.interfaces import (
+    CreateUserErrorInterface,
+    DeleteUserErrorInterface
+)
 
 if TYPE_CHECKING:
-    from domain.interfaces.units.user.user_types import UserLoginType
+    from domain.interfaces.user.types import UserLoginType, UserMessageType
 
 
-class UserCreateError(UserRepositoryError):
-    """
-    Ошибка создания пользователя в хранилище.
-
-    :ivar login: Атрибут логина пользователя.
-    :type login: UserLoginType
-    """
+class UserCreateError(CreateUserErrorInterface):
+    """Ошибка создания пользователя в хранилище."""
 
     def __init__(self, login: UserLoginType):
         """
@@ -23,21 +21,22 @@ class UserCreateError(UserRepositoryError):
         :param login: Логин пользователя.
         :type login: UserLoginType
         """
-        self.login = login
+        self.__login = login
 
     @override
     @property
-    def message(self) -> str:
-        return f"Ошибка создания пользователя в хранилище! -> {self.login}"
+    def message(self) -> UserMessageType:
+        """
+         Сообщение об ошибке.
+
+         :return: Текст ошибки.
+         :rtype: UserMessageType
+         """
+        return f"Ошибка создания пользователя в хранилище! -> {self.__login}"
 
 
-class UserDeleteError(UserRepositoryError):
-    """
-    Ошибка удаления пользователя из хранилища.
-
-    :ivar login: Атрибут логина пользователя.
-    :type login: UserLoginType
-    """
+class UserDeleteError(DeleteUserErrorInterface):
+    """Ошибка удаления пользователя из хранилища."""
 
     def __init__(self, login: UserLoginType):
         """
@@ -46,18 +45,30 @@ class UserDeleteError(UserRepositoryError):
         :param login: Логин пользователя.
         :type login: UserLoginType
         """
-        self.login = login
+        self.__login = login
 
     @override
     @property
-    def message(self) -> str:
-        return f"Ошибка удаления пользователя из хранилища! -> {self.login}"
+    def message(self) -> UserMessageType:
+        """
+         Сообщение об ошибке.
+
+         :return: Текст ошибки.
+         :rtype: UserMessageType
+         """
+        return f"Ошибка удаления пользователя из хранилища! -> {self.__login}"
 
 
-class UserDeleteAllError(UserRepositoryError):
+class UserDeleteAllError(DeleteUserErrorInterface):
     """Ошибка удаления всех пользователей из хранилища."""
 
     @override
     @property
-    def message(self) -> str:
+    def message(self) -> UserMessageType:
+        """
+         Сообщение об ошибке.
+
+         :return: Текст ошибки.
+         :rtype: UserMessageType
+         """
         return "Ошибка удаления всех пользователей из хранилища!"

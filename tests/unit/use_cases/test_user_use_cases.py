@@ -11,7 +11,7 @@ from domain.use_cases import (
     CreateUser,
     DeleteUser,
     DeleteAllUsers,
-    UpdateSettings,
+    UpdateUserMeta,
     ChangeUserPassword
 )
 from domain.entities import User
@@ -23,13 +23,12 @@ if TYPE_CHECKING:
 
 class TestUser:
     """Тестирование бизнес-логики пользователя."""
-
-    SETTINGS_TEST_PARAMS = (
+    META_TEST_PARAMS = (
         'test_name',
         Path('./data/avatar.png'),
         60
     )
-    UPD_SETTINGS_TEST_PARAMS = ('test_new_name', None, 60)
+    UPD_META_TEST_PARAMS = ('test_new_name', None, 60)
 
     USER_TEST_PARAMS = ('test_login', 'test_password'.encode('utf-8'))
     UPD_USER_TEST_PARAMS = ('test_new_password'.encode('utf-8'),)
@@ -59,9 +58,9 @@ class TestUser:
         assert DeleteAllUsers(mock_user_uow), \
             "Ошибка при создании бизнес-логики удаления всех пользователей!"
 
-    def test_create_update_settings(self, mock_user_uow: MockType):
-        assert UpdateSettings(mock_user_uow), (
-            "Ошибка при создании бизнес-логики обновления настроек "
+    def test_create_update_meta(self, mock_user_uow: MockType):
+        assert UpdateUserMeta(mock_user_uow), (
+            "Ошибка при создании бизнес-логики обновления метаданных "
             "пользователя!"
         )
 
@@ -114,7 +113,7 @@ class TestUser:
             mock_user_uow: MockType
     ):
         login, password = self.USER_TEST_PARAMS
-        name, avatar_path, time_block = self.SETTINGS_TEST_PARAMS
+        name, avatar_path, time_block = self.META_TEST_PARAMS
 
         create_user = CreateUser(mock_user_uow)
         result = create_user.execute(
@@ -127,10 +126,10 @@ class TestUser:
 
         assert result.login == login, "Неверный логин пользователя!"
         assert result.password != password, "Пароль пользователя не хеширован!"
-        assert result.settings.name == name, "Неверное имя пользователя!"
-        assert result.settings.avatar_path == avatar_path, \
+        assert result.meta.name == name, "Неверное имя пользователя!"
+        assert result.meta.avatar_path == avatar_path, \
             "Неверный путь к аватарке пользователя!"
-        assert result.settings.time_block == time_block, \
+        assert result.meta.time_block == time_block, \
             "Неверное время блокировки сессии пользователя!"
 
         mock_user_uow.user_repos.set_item.assert_called_once()
@@ -155,38 +154,38 @@ class TestUser:
 
         mock_user_uow.user_repos.del_all_items.assert_called_once_with()
 
-    def test_update_settings_successfully_already_exists(
+    def test_update_meta_successfully_already_exists(
             self,
             mock_user_uow: MockType,
             user: User
     ):
         login = self.USER_TEST_PARAMS[0]
-        name, avatar_path, time_block = self.UPD_SETTINGS_TEST_PARAMS
+        name, avatar_path, time_block = self.UPD_META_TEST_PARAMS
 
-        update_settings = UpdateSettings(mock_user_uow)
-        result = update_settings.execute(login, name, avatar_path, time_block)
+        update_meta = UpdateUserMeta(mock_user_uow)
+        result = update_meta.execute(login, name, avatar_path, time_block)
 
         assert result.login == login, "Неверный логин пользователя!"
 
         if name is None:
-            assert result.settings.name == user.settings.name, \
+            assert result.meta.name == user.meta.name, \
                 "Имя пользователя не должно быть изменено!"
         else:
-            assert result.settings.name == name, \
+            assert result.meta.name == name, \
                 "Неверное имя пользователя!"
 
         if avatar_path is None:
-            assert result.settings.avatar_path == user.settings.avatar_path, \
+            assert result.meta.avatar_path == user.meta.avatar_path, \
                 "Путь к аватарке пользователя не должен быть изменен!"
         else:
-            assert result.settings.avatar_path == avatar_path, \
+            assert result.meta.avatar_path == avatar_path, \
                 "Неверный путь к аватарке пользователя!"
 
         if time_block is None:
-            assert result.settings.time_block == user.settings.time_block, \
+            assert result.meta.time_block == user.meta.time_block, \
                 "Время блокировки сессии пользователя не должно быть изменено!"
         else:
-            assert result.settings.time_block == time_block, \
+            assert result.meta.time_block == time_block, \
                 "Неверное время блокировки сессии пользователя!"
 
         mock_user_uow.user_repos.get_item.assert_called_once_with(login)
@@ -222,7 +221,7 @@ class TestUser:
         with pytest.raises(UserNotFoundError):
             choose_user.execute(login)
 
-    def test_update_settings_raises_not_found_not_existed_for_get_item(
+    def test_update_meta_raises_not_found_not_existed_for_get_item(
             self,
             mock_user_uow: MockType,
             user: User,
@@ -231,11 +230,11 @@ class TestUser:
 
         mock_user_uow.user_repos.get_item.return_value = None
 
-        update_settings = UpdateSettings(mock_user_uow)
+        update_meta = UpdateUserMeta(mock_user_uow)
         with pytest.raises(UserNotFoundError):
-            update_settings.execute(login, *self.UPD_SETTINGS_TEST_PARAMS)
+            update_meta.execute(login, *self.UPD_META_TEST_PARAMS)
 
-    def test_update_settings_raises_not_found_not_existed_for_upd_item(
+    def test_update_meta_raises_not_found_not_existed_for_upd_item(
             self,
             mock_user_uow: MockType,
             user: User,
@@ -244,9 +243,9 @@ class TestUser:
 
         mock_user_uow.user_repos.upd_item.return_value = None
 
-        update_settings = UpdateSettings(mock_user_uow)
+        update_meta = UpdateUserMeta(mock_user_uow)
         with pytest.raises(UserNotFoundError):
-            update_settings.execute(login, *self.UPD_SETTINGS_TEST_PARAMS)
+            update_meta.execute(login, *self.UPD_META_TEST_PARAMS)
 
     def test_change_password_raises_not_found_not_existed_for_get_item(
             self,

@@ -2,33 +2,28 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from domain.interfaces.units.card import ChooseAllCardsUseCaseInterface
 from domain.entities import Card
+from domain.interfaces import ChooseAllCardsUseCaseInterface
 
 if TYPE_CHECKING:
-    from domain.interfaces.units.card import CardUnitOfWorkInterface
-    from domain.interfaces.units.card.card_types import MetaDataUserLoginType
+    from domain.interfaces import CardUnitOfWorkInterface
+    from domain.interfaces.card.types import CardMetaUserLoginType
 
 
 class ChooseAllCards(ChooseAllCardsUseCaseInterface[Card]):
-    """
-    Получение всех карточек пользователя.
-
-    :ivar __uow: Атрибут менеджера состояния транзакции карточки
-                 пользователя.
-    :type __uow: CardUnitOfWorkInterface
-    """
+    """Получение всех карточек пользователя."""
 
     def __init__(self, uow: CardUnitOfWorkInterface[Card]):
         """
         Инициализация получения карточки пользователя.
 
-        :param uow: Менеджер состояния транзакции карточки пользователя.
+        :param uow: Менеджер управления транзакцией карточки
+                    пользователя.
         :type uow: CardUnitOfWorkInterface
         """
         self.__uow = uow
 
-    def execute(self, user_login: MetaDataUserLoginType) -> list[Card]:
+    def execute(self, user_login: CardMetaUserLoginType) -> list[Card]:
         """
         Получение всех карточек пользователя.
 
@@ -36,13 +31,13 @@ class ChooseAllCards(ChooseAllCardsUseCaseInterface[Card]):
         Расшифровка всех карточек пользователя.
 
         :param user_login: Логин пользователя.
-        :type user_login: MetaDataUserLoginType
+        :type user_login: CardMetaUserLoginType
 
         :return: Все карточки пользователя.
         :rtype: list[Card]
         """
         with self.__uow:
-            cards = self.__uow.card_repos.get_all_items(user_login)
+            cards = list(self.__uow.card_repos.get_all_items(user_login))
             for i, card in enumerate(cards):
                 card.decrypt()
 

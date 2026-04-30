@@ -1,5 +1,4 @@
 from .card import Card
-from .dto import MetaDataDTO, CardDTO
-from .metadata import MetaData
+from .meta import CardMeta
 
-__all__ = ['Card', 'MetaDataDTO', 'CardDTO', 'MetaData']
+__all__ = ['Card', 'CardMeta']

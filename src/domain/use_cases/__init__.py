@@ -5,7 +5,7 @@ from .card import (
     DeleteCard,
     DeleteAllCards,
     UpdateCard,
-    UpdateMetaData
+    UpdateCardMeta
 )
 from .user import (
     ChooseUser,
@@ -13,7 +13,7 @@ from .user import (
     CreateUser,
     DeleteUser,
     DeleteAllUsers,
-    UpdateSettings,
+    UpdateUserMeta,
     ChangeUserPassword
 )
 
@@ -24,12 +24,12 @@ __all__ = [
     'DeleteCard',
     'DeleteAllCards',
     'UpdateCard',
-    'UpdateMetaData',
+    'UpdateCardMeta',
     'ChooseUser',
     'ChooseAllUsers',
     'CreateUser',
     'DeleteUser',
     'DeleteAllUsers',
-    'UpdateSettings',
+    'UpdateUserMeta',
     'ChangeUserPassword'
 ]

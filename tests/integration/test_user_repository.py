@@ -7,7 +7,7 @@ import pytest
 
 from infrastructure.persistence.models import UserORM
 from infrastructure.persistence.repositories import UserStorage
-from domain.entities import Settings, User
+from domain.entities import UserMeta, User
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
@@ -39,14 +39,14 @@ def user_orm() -> UserORM:
 @pytest.fixture
 def user() -> User:
     user = User(
-        Settings(
+        UserMeta(
             USER_ORM_TEST_PARAMS['name'],
             Path(USER_ORM_TEST_PARAMS['avatar_path']),
-            USER_ORM_TEST_PARAMS['time_block']
+            USER_ORM_TEST_PARAMS['time_block'],
+            USER_ORM_TEST_PARAMS['salt']
         ),
         USER_ORM_TEST_PARAMS['login'],
-        USER_ORM_TEST_PARAMS['password'],
-        USER_ORM_TEST_PARAMS['salt']
+        USER_ORM_TEST_PARAMS['password']
     )
 
     return user
@@ -77,14 +77,14 @@ def test_get_item_successfully_already_exists(
         pytest.fail("Пользователя нет в хранилище!")
 
     assert result.login == login, "Неверный логин пользователя!"
-    assert result.settings.name == name, "Неверное имя пользователя!"
-    assert result.settings.avatar_path == avatar_path, \
+    assert result.meta.name == name, "Неверное имя пользователя!"
+    assert result.meta.avatar_path == avatar_path, \
         "Неверный путь к аватарке пользователя!"
-    assert result.settings.time_block == time_block, \
+    assert result.meta.time_block == time_block, \
         "Неверное время блокировки сессии пользователя!"
+    assert result.meta.salt == salt, \
+        "Неверная соль хеширования пароля пользователя!"
     assert result.password == password, "Неверный хеш пароля пользователя!"
-    assert result.salt == salt, \
-        "Неверная соль для хеширования пароля пользователя!"
 
 def test_get_item_successfully_not_existed(db_session: Session):
     login = USER_ORM_TEST_PARAMS['login']
@@ -127,16 +127,16 @@ def test_get_all_items_successfully_already_exists(
 
         assert res.login == login, \
             f"Неверный логин у {num} пользователя!"
-        assert res.settings.name == name, \
+        assert res.meta.name == name, \
             f"Неверное имя у {num} пользователя!"
-        assert res.settings.avatar_path == avatar_path, \
+        assert res.meta.avatar_path == avatar_path, \
             f"Неверный путь к аватарке у {num} пользователя!"
-        assert res.settings.time_block == time_block, \
+        assert res.meta.time_block == time_block, \
             f"Неверное время блокировки сессии у {num} пользователя!"
+        assert res.meta.salt == salt, \
+            f"Неверная соль хеширования пароля у {num} пользователя!"
         assert res.password == password, \
             f"Неверный хеш пароля у {num} пользователя!"
-        assert res.salt == salt, \
-            f"Неверная соль для хеширования пароля у {num} пользователя!"
 
 def test_get_all_items_successfully_not_existed(db_session: Session):
     user_storage = UserStorage(db_session)
@@ -160,14 +160,14 @@ def test_set_item_successfully_already_exists(
     result = user_storage.set_item(user)
 
     assert result.login == login, "Неверный логин пользователя!"
-    assert result.settings.name == name, "Неверное имя пользователя!"
-    assert result.settings.avatar_path == avatar_path, \
+    assert result.meta.name == name, "Неверное имя пользователя!"
+    assert result.meta.avatar_path == avatar_path, \
         "Неверный путь к аватарке пользователя!"
-    assert result.settings.time_block == time_block, \
+    assert result.meta.time_block == time_block, \
         "Неверное время блокировки сессии пользователя!"
+    assert result.meta.salt == salt, \
+        "Неверная соль хеширования пароля пользователя!"
     assert result.password == password, "Неверный хеш пароля пользователя!"
-    assert result.salt == salt, \
-        "Неверная соль для хеширования пароля пользователя!"
 
 def test_upd_item_successfully_already_exists(
         db_session: Session,
@@ -186,7 +186,7 @@ def test_upd_item_successfully_already_exists(
     new_password = (b'~s\xfa\xce\xbf|y=m\x10\t\xe41k\x0f\xaa&\xe3U\xdc\xcd'
                     b'\xbco\xc5\x15\xd1\x84\xc5w=]F')
 
-    user.settings.name = new_name
+    user.meta.name = new_name
     user.password = new_password
 
     user_storage = UserStorage(db_session)
@@ -196,15 +196,14 @@ def test_upd_item_successfully_already_exists(
         pytest.fail("Пользователя нет в хранилище")
 
     assert result.login == login, "Неверный логин пользователя!"
-    assert result.settings.name == new_name, "Неверное имя пользователя!"
-    assert result.settings.avatar_path == avatar_path, \
+    assert result.meta.name == new_name, "Неверное имя пользователя!"
+    assert result.meta.avatar_path == avatar_path, \
         "Неверный путь к аватарке пользователя!"
-    assert result.settings.time_block == time_block, \
+    assert result.meta.time_block == time_block, \
         "Неверное время блокировки сессии пользователя!"
-    assert result.password == new_password, \
-        "Неверный хеш пароля пользователя!"
-    assert result.salt == salt, \
-        "Неверная соль для хеширования пароля пользователя!"
+    assert result.meta.salt == salt, \
+        "Неверная соль хеширования пароля пользователя!"
+    assert result.password == new_password, "Неверный хеш пароля пользователя!"
 
 def test_upd_item_successfully_not_existed(db_session: Session, user: User):
     user_storage = UserStorage(db_session)

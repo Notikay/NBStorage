@@ -2,33 +2,28 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from domain.entities import User, Settings
-from domain.interfaces.units.user import CreateUserUseCaseInterface
+from domain.entities import User, UserMeta
+from domain.interfaces import CreateUserUseCaseInterface
 
 if TYPE_CHECKING:
-    from domain.interfaces.units.user import UserUnitOfWorkInterface
-    from domain.interfaces.units.user.user_types import (
+    from domain.interfaces import UserUnitOfWorkInterface
+    from domain.interfaces.user.types import (
         UserLoginType,
         UserPasswordType,
-        SettingsNameType,
-        SettingsAvatarPathType,
-        SettingsTimeBlockType
+        UserMetaNameType,
+        UserMetaAvatarPathType,
+        UserMetaTimeBlockType
     )
 
 
 class CreateUser(CreateUserUseCaseInterface[User]):
-    """
-    Создание пользователя.
-
-    :ivar __uow: Атрибут менеджера состояния транзакции пользователя.
-    :type __uow: UserUnitOfWorkInterface
-    """
+    """Создание пользователя."""
 
     def __init__(self, uow: UserUnitOfWorkInterface[User]):
         """
         Инициализация получения карточки пользователя.
 
-        :param uow: Менеджер состояния транзакции пользователя.
+        :param uow: Менеджер управления транзакцией пользователя.
         :type uow: UserUnitOfWorkInterface
         """
         self.__uow = uow
@@ -37,9 +32,9 @@ class CreateUser(CreateUserUseCaseInterface[User]):
             self,
             login: UserLoginType,
             password: UserPasswordType,
-            name: SettingsNameType,
-            avatar_path: SettingsAvatarPathType,
-            time_block: SettingsTimeBlockType
+            name: UserMetaNameType,
+            avatar_path: UserMetaAvatarPathType,
+            time_block: UserMetaTimeBlockType
     ) -> User:
         """
         Создание пользователя.
@@ -55,20 +50,20 @@ class CreateUser(CreateUserUseCaseInterface[User]):
         :type password: UserPasswordType
 
         :param name: Имя пользователя.
-        :type name: SettingsNameType
+        :type name: UserMetaNameType
 
         :param avatar_path: Путь к аватарке пользователя.
-        :type avatar_path: SettingsAvatarPathType
+        :type avatar_path: UserMetaAvatarPathType
 
         :param time_block: Время блокировки сессии пользователя.
-        :type time_block: SettingsTimeBlockType
+        :type time_block: UserMetaTimeBlockType
 
         :return: Пользователь.
         :rtype: User
         """
         with self.__uow:
             user = User(
-                Settings(name, avatar_path, time_block),
+                UserMeta(name, avatar_path, time_block),
                 login,
                 password
             )

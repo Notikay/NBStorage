@@ -2,184 +2,141 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, override
 
-from domain.interfaces.units.user.exceptions import UserEntityError
+from domain.interfaces import UserInvalidErrorInterface
 
 if TYPE_CHECKING:
-    from domain.interfaces.units.user.user_types import (
-        SettingsNameType,
-        SettingsAvatarPathType,
-        SettingsTimeBlockType,
+    from domain.interfaces.user.types import (
+        UserMetaNameType,
+        UserMessageType,
+        UserMetaAvatarPathType,
+        UserMetaTimeBlockType,
         UserLoginType,
         UserPasswordType
     )
 
 
-class SettingsInvalidNameError(UserEntityError):
-    """
-    Ошибка настроек пользователя, при некорректном имени.
+class UserMetaInvalidNameError(UserInvalidErrorInterface):
+    """Ошибка метаданных пользователя, при некорректном имени."""
 
-    :ivar name: Атрибут имени пользователя.
-    :type name: SettingsNameType
-
-    :ivar msg: Атрибут подробного описания ошибки.
-    :type msg: str | None
-    """
-
-    def __init__(self, name: SettingsNameType, msg: str | None = None):
+    def __init__(self, name: UserMetaNameType):
         """
         Инициализация ошибки.
 
-        :param name: Имя пользователя.
-        :type name: SettingsNameType
-
-        :param msg: Подробное описание ошибки.
-        :type msg: str | None
+        :param name: Название карточки пользователя.
+        :type name: UserMetaNameType
         """
-        self.name = name
-        self.msg = msg
+        self.__name = name
 
     @override
     @property
-    def message(self) -> str:
-        if self.msg:
-            return f"{self.msg} -> {self.name}"
-        return f"Некорректное имя пользователя! -> {self.name}"
+    def message(self) -> UserMessageType:
+        """
+        Сообщение об ошибке.
+
+        :return: Текст ошибки.
+        :rtype: UserMessageType
+        """
+        return f"Некорректное имя пользователя! -> {self.__name}"
 
 
-class SettingsInvalidAvatarPathError(UserEntityError):
+class UserMetaInvalidAvatarPathError(UserInvalidErrorInterface):
     """
-    Ошибка настроек пользователя, при некорректном пути к аватарке.
-
-    :ivar avatar_path: Атрибут пути к аватарке пользователя.
-    :type avatar_path: SettingsAvatarPathType
-
-    :ivar msg: Атрибут подробного описания ошибки.
-    :type msg: str | None
+    Ошибка метаданных пользователя, при некорректном пути к аватарке.
     """
 
-    def __init__(
-            self,
-            avatar_path: SettingsAvatarPathType,
-            msg: str | None = None
-    ):
+    def __init__(self, avatar_path: UserMetaAvatarPathType):
         """
         Инициализация ошибки.
 
         :param avatar_path: Путь к аватарке пользователя.
-        :type avatar_path: SettingsAvatarPathType
-
-        :param msg: Подробное описание ошибки.
-        :type msg: str | None
+        :type avatar_path: UserMetaAvatarPathType
         """
-        self.avatar_path = avatar_path
-        self.msg = msg
+        self.__avatar_path = avatar_path
 
     @override
     @property
-    def message(self) -> str:
-        if self.msg:
-            return f"{self.msg} -> {self.avatar_path}"
+    def message(self) -> UserMessageType:
+        """
+        Сообщение об ошибке.
+
+        :return: Текст ошибки.
+        :rtype: UserMessageType
+        """
         return ("Некорректный путь к аватарке пользователя! -> "
-                f"{self.avatar_path}")
+                f"{self.__avatar_path}")
 
 
-class SettingsInvalidTimeBlockError(UserEntityError):
+class UserMetaInvalidTimeBlockError(UserInvalidErrorInterface):
     """
-    Ошибка настроек пользователя, при некорректном времени блокировки
+    Ошибка метаданных пользователя, при некорректном времени блокировки
     сессии.
-
-    :ivar time_block: Атрибут времени блокировки сессии пользователя.
-    :type time_block: SettingsTimeBlockType
-
-    :ivar msg: Атрибут подробного описания ошибки.
-    :type msg: str | None
     """
 
-    def __init__(
-            self,
-            time_block: SettingsTimeBlockType,
-            msg: str | None = None
-    ):
+    def __init__(self, time_block: UserMetaTimeBlockType):
         """
         Инициализация ошибки.
 
         :param time_block: Время блокировки сессии пользователя.
-        :type time_block: SettingsTimeBlockType
-
-        :param msg: Подробное описание ошибки.
-        :type msg: str | None
+        :type time_block: UserMetaTimeBlockType
         """
-        self.time_block = time_block
-        self.msg = msg
+        self.__time_block = time_block
 
     @override
     @property
-    def message(self) -> str:
-        if self.msg:
-            return f"{self.msg} -> {self.time_block}"
+    def message(self) -> UserMessageType:
+        """
+        Сообщение об ошибке.
+
+        :return: Текст ошибки.
+        :rtype: UserMessageType
+        """
         return ("Некорректное время блокировки сессии пользователя! -> "
-                f"{self.time_block}")
+                f"{self.__time_block}")
 
 
-class UserInvalidLoginError(UserEntityError):
-    """
-    Ошибка пользователя, при некорректном логине.
+class UserInvalidLoginError(UserInvalidErrorInterface):
+    """Ошибка пользователя, при некорректном логине."""
 
-    :ivar login: Атрибут логина пользователя.
-    :type login: UserLoginType
-
-    :ivar msg: Атрибут подробного описания ошибки.
-    :type msg: str | None
-    """
-
-    def __init__(self, login: UserLoginType, msg: str | None = None):
+    def __init__(self, login: UserLoginType):
         """
         Инициализация ошибки.
 
         :param login: Логин пользователя.
         :type login: UserLoginType
-
-        :param msg: Подробное описание ошибки.
-        :type msg: str | None
         """
-        self.login = login
-        self.msg = msg
+        self.__login = login
 
     @override
     @property
-    def message(self) -> str:
-        if self.msg:
-            return f"{self.msg} -> {self.login}"
-        return f"Некорректный логин пользователя! -> {self.login}"
+    def message(self) -> UserMessageType:
+        """
+        Сообщение об ошибке.
+
+        :return: Текст ошибки.
+        :rtype: UserMessageType
+        """
+        return f"Некорректный логин пользователя! -> {self.__login}"
 
 
-class UserInvalidPasswordError(UserEntityError):
-    """
-    Ошибка пользователя, при некорректном пароле.
+class UserInvalidPasswordError(UserInvalidErrorInterface):
+    """Ошибка пользователя, при некорректном пароле."""
 
-    :ivar password: Атрибут пароля пользователя.
-    :type password: UserPasswordType
-
-    :ivar msg: Атрибут подробного описания ошибки.
-    :type msg: str | None
-    """
-
-    def __init__(self, password: UserPasswordType, msg: str | None = None):
+    def __init__(self, password: UserPasswordType):
         """
         Инициализация ошибки.
 
         :param password: Пароль пользователя.
         :type password: UserPasswordType
-
-        :param msg: Подробное описание ошибки.
-        :type msg: str | None
         """
-        self.password = password
-        self.msg = msg
+        self.__password = password
 
     @override
     @property
-    def message(self) -> str:
-        if self.msg:
-            return f"{self.msg} -> {self.password!r}"
-        return f"Некорректный пароль пользователя! -> {self.password!r}"
+    def message(self) -> UserMessageType:
+        """
+        Сообщение об ошибке.
+
+        :return: Текст ошибки.
+        :rtype: UserMessageType
+        """
+        return f"Некорректный пароль пользователя! -> {self.__password!r}"

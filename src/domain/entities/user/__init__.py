@@ -1,5 +1,4 @@
-from .dto import SettingsDTO, UserDTO
-from .settings import Settings
+from .meta import UserMeta
 from .user import User
 
-__all__ = ['SettingsDTO', 'UserDTO', 'Settings', 'User']
+__all__ = ['UserMeta', 'User']

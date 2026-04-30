@@ -4,7 +4,7 @@ from .choose_all import ChooseAllUsers
 from .create import CreateUser
 from .delete import DeleteUser
 from .delete_all import DeleteAllUsers
-from .update_settings import UpdateSettings
+from .update_meta import UpdateUserMeta
 
 __all__ = [
     'ChangeUserPassword',
@@ -13,5 +13,5 @@ __all__ = [
     'CreateUser',
     'DeleteUser',
     'DeleteAllUsers',
-    'UpdateSettings'
+    'UpdateUserMeta'
 ]

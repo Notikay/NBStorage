@@ -3,67 +3,65 @@ from __future__ import annotations
 from dataclasses import dataclass, field, fields
 from functools import partial
 from math import ceil
-from typing import TYPE_CHECKING, override, Self
+from typing import TYPE_CHECKING, Self
 
-from domain.interfaces.units.card import CardEntityInterface
-from .dto import CardDTO
-from .exceptions import CardInvalidParamFieldError
+from domain.interfaces import CardEntityInterface
+from .exceptions import CardInvalidParamError
 
 if TYPE_CHECKING:
-    from domain.interfaces.units.card.card_types import (
+    from domain.interfaces.card.types import (
         CardParamType,
-        CardUpdParamType
+        CardUpdParamType,
+        CardParamIsThereType
     )
-    from domain.interfaces.base.base_types import CheckParamFnType
-    from .metadata import MetaData
+    from .dto import CardDTO
+    from .meta import CardMeta
 
 
 @dataclass(slots=True)
-class Card(CardEntityInterface[CardDTO]):
-    """
-    Карточка пользователя.
-
-    :var _metadata: Атрибут метаданных карточки пользователя.
-    :type _metadata: MetaData
-
-    :var _username: Атрибут имени пользователя от сервиса.
-    :type _username: CardParamType
-
-    :var _email: Атрибут электронной почты привязанный к сервису.
-    :type _email: CardParamType
-
-    :var _password: Атрибут пароля от сервиса.
-    :type _password: CardParamType
-
-    :var _url: Атрибут URL-адреса сервиса.
-    :type _url: CardParamType
-
-    :var _description: Атрибут описания сервиса.
-    :type _description: CardParamType
-
-    :var _is_encrypted: Атрибут флага шифровки данных для карточки
-                        пользователя.
-    :type _is_encrypted: bool
-    """
-    _metadata: MetaData
+class Card(CardEntityInterface):
+    """Карточка пользователя."""
+    _meta: CardMeta
     _username: CardParamType
     _email: CardParamType = field(repr=False)
     _password: CardParamType = field(repr=False)
     _url: CardParamType
     _description: CardParamType
 
-    _is_encrypted: bool = field(default=False, init=True, repr=False)
+    _is_encrypted: bool = field(default=False, init=True, repr=True)
 
     @property
-    def metadata(self) -> MetaData:
-        return self._metadata
+    def meta(self) -> CardMeta:
+        """
+        Метаданные карточки пользователя.
+
+        Только для чтения.
+
+        :rtype: CardMeta
+        """
+        return self._meta
 
     @property
     def is_encrypted(self) -> bool:
+        """
+        Флаг шифровки данных карточки пользователя.
+
+        Только для чтения.
+
+        :rtype: bool
+        """
         return self._is_encrypted
 
     @property
     def username(self) -> CardParamType:
+        """
+        Имя пользователя от сервиса.
+
+        Запись произойдет только в случае если новое имя пользователя в
+        сервисе не является None и будет корректным.
+
+        :rtype: CardParamType
+        """
         return self._username
 
     @username.setter
@@ -72,6 +70,14 @@ class Card(CardEntityInterface[CardDTO]):
 
     @property
     def email(self) -> CardParamType:
+        """
+        Электронная почта привязанная к сервису.
+
+        Запись произойдет только в случае если новая электронная почта,
+        привязанная к сервису, не является None и будет корректным.
+
+        :rtype: CardParamType
+        """
         return self._email
 
     @email.setter
@@ -80,6 +86,14 @@ class Card(CardEntityInterface[CardDTO]):
 
     @property
     def password(self) -> CardParamType:
+        """
+        Пароль от сервиса.
+
+        Запись произойдет только в случае если новый пароль от сервиса
+        не является None и будет корректным.
+
+        :rtype: CardParamType
+        """
         return self._password
 
     @password.setter
@@ -88,6 +102,14 @@ class Card(CardEntityInterface[CardDTO]):
 
     @property
     def url(self) -> CardParamType:
+        """
+        URL-адрес сервиса.
+
+        Запись произойдет только в случае если новый URL-адрес сервиса
+        не является None и будет корректным.
+
+        :rtype: CardParamType
+        """
         return self._url
 
     @url.setter
@@ -96,6 +118,14 @@ class Card(CardEntityInterface[CardDTO]):
 
     @property
     def description(self) -> CardParamType:
+        """
+        Описание сервиса.
+
+        Запись произойдет только в случае если новое описание сервиса
+        не является None и будет корректным.
+
+        :rtype: CardParamType
+        """
         return self._description
 
     @description.setter
@@ -104,7 +134,7 @@ class Card(CardEntityInterface[CardDTO]):
 
     def encrypt(self) -> None:
         """Шифровка данных карточки пользователя."""
-        encrypt_partial = partial(self.xor_otp_encrypt, key=self._metadata.key)
+        encrypt_partial = partial(self.xor_otp_encrypt, key=self._meta.key)
 
         self._username = encrypt_partial(self._username)
         self._email = encrypt_partial(self._email)
@@ -123,7 +153,7 @@ class Card(CardEntityInterface[CardDTO]):
         """
         Преобразование в словарь.
 
-        Проверка на шифрованность данных карточки пользователя, для
+        Проверка на шифрованные данные карточки пользователя, для
         корректного преобразования в словарь.
 
         :return: Словарь с данными карточки пользователя.
@@ -153,7 +183,7 @@ class Card(CardEntityInterface[CardDTO]):
                 if self._description is not None else None
 
         return {
-            'metadata': self._metadata.to_dict(),
+            'meta': self._meta.to_dict(),
             'username': username,
             'email': email,
             'password': password,
@@ -185,43 +215,79 @@ class Card(CardEntityInterface[CardDTO]):
 
         return bytes(p ^ k for p, k in zip(param, key))
 
-    @override
     def _update_field(
             self,
             param_field_name: str,
-            value: CardUpdParamType,
-            check_param_fn: CheckParamFnType | None = None
+            value: CardUpdParamType
     ) -> None:
         """
-        Обновление параметра в данных карточки пользователя.
+        Обновление параметра в карточке пользователя.
 
         Если параметр пуст, то он будет обновлен на None.
         Если данные карточки пользователя зашифрованы, то сначала будет
         их расшифровка, затем обновление параметра и снова шифровка.
 
-        :param param_field_name: Название параметра в данных карточки
+        :param param_field_name: Название параметра в карточке
                                  пользователя.
         :type param_field_name: str
 
-        :param value: Новое значение параметра в данных карточки
-                      пользователя.
+        :param value: Новое значение параметра в карточке пользователя.
         :type value: CardUpdParamType
-
-        :param check_param_fn: Функция проверки корректности параметра
-                               в данных карточки пользователя.
-                               Не используется в текущей реализации.
-        :type check_param_fn: CheckParamFnType | None
         """
         if value is not None:
-            if value.replace(b'\x00', b''):
+            try:
+                self.__check_empty_param(value, param_field_name)
+            except CardInvalidParamError:
+                setattr(self, param_field_name, None)
+            else:
+                self.__check_param_equal_key(value, param_field_name)
+                self.__check_key_must_not_start_with_param(
+                    value,
+                    param_field_name
+                )
                 if self._is_encrypted:
                     self.decrypt()
                     setattr(self, param_field_name, value)
                     self.encrypt()
                 else:
                     setattr(self, param_field_name, value)
-            else:
-                setattr(self, param_field_name, None)
+
+    def __check_param_equal_key(
+            self,
+            param: CardParamIsThereType,
+            param_field_name: str
+    ):
+        if param == self._meta.key:
+            raise CardInvalidParamError(
+                param,
+                param_field_name,
+                "Параметр и ключ не должны быть одинаковыми!"
+            )
+
+    def __check_key_must_not_start_with_param(
+            self,
+            param: CardParamIsThereType,
+            param_field_name: str
+    ):
+        if self._meta.key.startswith(param):
+            raise CardInvalidParamError(
+                param,
+                param_field_name,
+                "Ключ не должен начинаться с параметра!"
+            )
+
+    @staticmethod
+    def __check_empty_param(
+            param: CardParamIsThereType,
+            param_field_name: str
+    ):
+        if not param.replace(b'\x00', b''):
+            raise CardInvalidParamError(
+                param,
+                param_field_name,
+                "Параметр не должен быть пустым!"
+            )
+
 
     def __post_init__(self: Self) -> None:
         """
@@ -229,33 +295,16 @@ class Card(CardEntityInterface[CardDTO]):
 
         Проверка на корректность данных карточки пользователя.
         Параметр с метаданными карточки пользователя (_metadata) и флаг
-        шифровки данных для карточки пользователя (_is_encrypted) не
+        шифровки данных карточки пользователя (_is_encrypted) не
         проверяются.
-
-        :raises CardInvalidParamFieldError: Если параметр и ключ
-                                            одинаковы.
-                                            Если параметр пуст.
-                                            Если ключ начинается с
-                                            параметра.
         """
         for param_field in fields(self):
-            if param_field.name in ('_metadata', '_is_encrypted'):
+            if param_field.name in ('_meta', '_is_encrypted'):
                 continue
             if (param := getattr(self, param_field.name)) is not None:
-                if param == self._metadata.key:
-                    raise CardInvalidParamFieldError(
-                        param,
-                        param_field.name,
-                        "Параметр и ключ не должны быть одинаковыми!"
-                    )
-                elif not param.replace(b'\x00', b''):
-                    raise CardInvalidParamFieldError(
-                        param,
-                        param_field.name
-                    )
-                elif self._metadata.key.startswith(param):
-                    raise CardInvalidParamFieldError(
-                        param,
-                        param_field.name,
-                        "Ключ не должен начинаться с параметра!"
-                    )
+                self.__check_empty_param(param, param_field.name)
+                self.__check_param_equal_key(param, param_field.name)
+                self.__check_key_must_not_start_with_param(
+                    param,
+                    param_field.name
+                )
