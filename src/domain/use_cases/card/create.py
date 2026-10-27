@@ -1,92 +1,44 @@
-from __future__ import annotations
+import structlog
 
-from typing import TYPE_CHECKING
+from domain.entities.card import Card, CardMeta
+from domain.interfaces.card import CardUnitOfWork
 
-from domain.entities import Card, CardMeta
-from domain.interfaces import CreateCardUseCaseInterface
+from .commands import CreateCardCommand
 
-if TYPE_CHECKING:
-    from domain.interfaces import CardUnitOfWorkInterface
-    from domain.interfaces.card.types import (
-        CardMetaUserLoginType,
-        CardMetaTitleType,
-        CardMetaIconPathType,
-        CardParamType
-    )
+logger = structlog.getLogger(__name__)
 
 
-class CreateCard(CreateCardUseCaseInterface[Card]):
+class CreateCard:
     """Создание карточки пользователя."""
 
-    def __init__(self, uow: CardUnitOfWorkInterface[Card]):
-        """
-        Инициализация получения карточки пользователя.
-
-        :param uow: Менеджер управления транзакцией карточки
-                    пользователя.
-        :type uow: CardUnitOfWorkInterface
-        """
+    def __init__(self, uow: CardUnitOfWork) -> None:
         self.__uow = uow
 
-    def execute(
-            self,
-            user_login: CardMetaUserLoginType,
-            title: CardMetaTitleType,
-            icon_path: CardMetaIconPathType,
-            username: CardParamType,
-            email: CardParamType,
-            password: CardParamType,
-            url: CardParamType,
-            description: CardParamType
-    ) -> Card:
+    def __call__(self, cmd: CreateCardCommand) -> Card:
         """
-        Создание карточки пользователя.
-
-        Формирование карточки пользователя.
-        Шифрование карточки пользователя.
-        Сохранение карточки пользователя в хранилище.
-
-        :param user_login: Логин пользователя.
-        :type user_login: CardMetaUserLoginType
-
-        :param title: Название карточки пользователя.
-        :type title: CardMetaTitleType
-
-        :param icon_path: Путь к иконке карточки пользователя.
-        :type icon_path: CardMetaIconPathType
-
-        :param username: Имя пользователя от сервиса.
-        :type username: CardParamType
-
-        :param email: Электронная почта привязанная к сервису.
-        :type email: CardParamType
-
-        :param password: Пароль от сервиса.
-        :type password: CardParamType
-
-        :param url: URL-адрес сервиса.
-        :type url: CardParamType
-
-        :param description: Описание сервиса.
-        :type description: CardParamType
-
-        :return: Карточка пользователя.
-        :rtype: Card
+        Формирование карточки пользователя, шифровка и сохранение в
+        хранилище.
         """
         with self.__uow:
             card = Card(
-                CardMeta(title, icon_path, user_login),
-                username,
-                email,
-                password,
-                url,
-                description
+                CardMeta(cmd.title, None, cmd.user_id),
+                cmd.username,
+                cmd.email,
+                cmd.password,
+                cmd.url,
+                cmd.description
             )
             card.encrypt()
 
-            card = self.__uow.card_repos.set_item(card)
+            card = self.__uow.card_repos.save(card)
             card.decrypt()
 
             self.__uow.commit()
+
+            logger.info(
+                "card_created",
+                user_id=card.meta.user_id,
+                card_id=card.meta.card_id
+            )
 
             return card

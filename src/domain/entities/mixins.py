@@ -1,6 +1,6 @@
-from typing import Callable, Any
+from collections.abc import Callable
 
-type CheckParamFnType = Callable[[Any], None]
+type CheckParamFnType = Callable[..., None]
 
 
 class UpdateEntityParamMixin:
@@ -9,7 +9,7 @@ class UpdateEntityParamMixin:
     def _update_field(
             self,
             param_field_name: str,
-            value: Any,
+            value: object,
             check_param_fn: CheckParamFnType
     ) -> None:
         if value is not None:

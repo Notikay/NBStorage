@@ -1,137 +1,49 @@
-from __future__ import annotations
+from shared.errors import MessageType, ValidationError
 
-from typing import TYPE_CHECKING, override
+from .types import CardMetaIconKeyType, CardMetaTitleType, CardParamType
 
-from domain.interfaces import CardInvalidErrorInterface
-
-if TYPE_CHECKING:
-    from domain.interfaces.card.types import (
-        CardMetaTitleType,
-        CardMessageType,
-        CardMetaIconPathType,
-        CardMetaUserLoginType,
-        CardParamType
-    )
+type ParamNameType = str
 
 
-class CardMetaInvalidTitleError(CardInvalidErrorInterface):
-    """
-    Ошибка метаданных карточки пользователя, при некорректном названии.
-    """
-
-    def __init__(self, title: CardMetaTitleType):
-        """
-        Инициализация ошибки.
-
-        :param title: Название карточки пользователя.
-        :type title: CardMetaTitleType
-        """
+class CardMetaInvalidTitleError(ValidationError):
+    def __init__(self, title: CardMetaTitleType) -> None:
         self.__title = title
+        super().__init__(f"Некорректное название карточки пользователя! -> {title=}")
 
-    @override
     @property
-    def message(self) -> CardMessageType:
-        """
-        Сообщение об ошибке.
-
-        :return: Текст ошибки.
-        :rtype: CardMessageType
-        """
-        return ("Некорректное название карточки пользователя! -> "
-                f"{self.__title}")
+    def title(self) -> CardMetaTitleType:
+        return self.__title
 
 
-class CardMetaInvalidIconPathError(CardInvalidErrorInterface):
-    """
-    Ошибка метаданных карточки пользователя, при некорректном пути к
-    иконке.
-    """
+class CardMetaInvalidIconKeyError(ValidationError):
+    def __init__(self, icon_key: CardMetaIconKeyType) -> None:
+        self.__icon_key = icon_key
+        super().__init__(
+            f"Некорректный ключ иконки карточки пользователя! -> {icon_key=}"
+        )
 
-    def __init__(self, icon_path: CardMetaIconPathType):
-        """
-        Инициализация ошибки.
-
-        :param icon_path: Путь к иконке карточки пользователя.
-        :type icon_path: CardMetaIconPathType
-        """
-        self.__icon_path = icon_path
-
-    @override
     @property
-    def message(self) -> CardMessageType:
-        """
-        Сообщение об ошибке.
-
-        :return: Текст ошибки.
-        :rtype: CardMessageType
-        """
-        return ("Некорректный путь к иконке карточки пользователя! -> "
-                f"{self.__icon_path}")
+    def icon_key(self) -> CardMetaIconKeyType:
+        return self.__icon_key
 
 
-class CardMetaInvalidUserLoginError(CardInvalidErrorInterface):
-    """
-    Ошибка метаданных карточки пользователя, при некорректном логине.
-    """
-
-    def __init__(self, user_login: CardMetaUserLoginType):
-        """
-        Инициализация ошибки.
-
-        :param user_login: Логин пользователя.
-        :type user_login: CardMetaUserLoginType
-        """
-        self.__user_login = user_login
-
-    @override
-    @property
-    def message(self) -> CardMessageType:
-        """
-        Сообщение об ошибке.
-
-        :return: Текст ошибки.
-        :rtype: CardMessageType
-        """
-        return f"Некорректный логин пользователя! -> {self.__user_login}"
-
-
-class CardInvalidParamError(CardInvalidErrorInterface):
-    """
-    Ошибка карточки пользователя, при некорректном значении параметра.
-    """
-
+class CardInvalidParamError(ValidationError):
     def __init__(
             self,
             param: CardParamType,
-            param_name: str,
-            msg: str | None = None
-    ):
-        """
-        Инициализация ошибки.
-
-        :param param: Значение параметра в карточке пользователя.
-        :type param: CardParamType
-
-        :param param_name: Название параметра в карточке пользователя.
-        :type param_name: str
-
-        :param msg: Подробное описание ошибки.
-        :type msg: str | None
-        """
+            param_name: ParamNameType,
+            msg: MessageType | None = None
+    ) -> None:
         self.__param = param
         self.__param_name = param_name
-        self.__msg = msg
 
-    @override
+        if msg:
+            message = f"{msg} -> {param_name=}: {param=!r}"
+        else:
+            message = ("Некорректное значение параметра в карточке пользователя! -> "
+                       f"{param_name=}: {param=!r}")
+        super().__init__(message)
+
     @property
-    def message(self) -> CardMessageType:
-        """
-        Сообщение об ошибке.
-
-        :return: Текст ошибки.
-        :rtype: CardMessageType
-        """
-        if self.__msg:
-            return f"{self.__msg} -> {self.__param_name}: {self.__param!r}"
-        return ("Некорректное значение параметра в карточке пользователя! -> "
-                f"{self.__param_name}: {self.__param!r}")
+    def param_name_with_param(self) -> dict[ParamNameType, CardParamType]:
+        return {self.__param_name: self.__param}

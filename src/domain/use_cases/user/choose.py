@@ -1,45 +1,31 @@
-from __future__ import annotations
+import structlog
 
-from typing import TYPE_CHECKING
+from domain.entities.user import User
+from domain.interfaces.user import UserUnitOfWork
 
-from domain.entities import User
-from domain.interfaces import ChooseUserUseCaseInterface
+from .commands import ChooseUserCommand
 from .exceptions import UserNotFoundError
 
-if TYPE_CHECKING:
-    from domain.interfaces import UserUnitOfWorkInterface
-    from domain.interfaces.user.types import UserLoginType
+logger = structlog.getLogger(__name__)
 
 
-class ChooseUser(ChooseUserUseCaseInterface[User]):
+class ChooseUser:
     """Получение пользователя."""
 
-    def __init__(self, uow: UserUnitOfWorkInterface[User]):
-        """
-        Инициализация получения карточки пользователя.
-
-        :param uow: Менеджер управления транзакцией пользователя.
-        :type uow: UserUnitOfWorkInterface
-        """
+    def __init__(self, uow: UserUnitOfWork) -> None:
         self.__uow = uow
 
-    def execute(self, login: UserLoginType) -> User:
+    def __call__(self, cmd: ChooseUserCommand) -> User:
         """
-        Получение пользователя.
-
-        :param login: Логин пользователя.
-        :type login: UserLoginType
-
-        :return: Пользователь.
-        :rtype: User
+        Получение пользователя из хранилища.
 
         :raises UserNotFoundError: Если пользователь не найден.
         """
         with self.__uow:
-            user = self.__uow.user_repos.get_item(login)
+            user: User | None = self.__uow.user_repos.get_by_id(cmd.user_id)
             if user is None:
-                raise UserNotFoundError(login)
+                raise UserNotFoundError(cmd.user_id)
 
-            self.__uow.commit()
+            logger.info("user_chosen", user_id=user.meta.user_id)
 
             return user

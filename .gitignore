@@ -8,7 +8,7 @@ __pycache__/
 
 # Distribution / packaging
 .Python
-db/
+db/==
 logs/
 build/
 develop-eggs/
@@ -95,9 +95,9 @@ ipython_config.py
 
 # pipenv
 #   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
-#   However, in case of collaboration, if having platform-specific dependencies or dependencies
-#   having no cross-platform support, pipenv may install dependencies that don't work, or not
-#   install all needed dependencies.
+#   However, in case of collaboration, if having platform-specific core or core
+#   having no cross-platform support, pipenv may install core that don't work, or not
+#   install all needed core.
 pipenv/
 Pipfile.lock
 
@@ -137,6 +137,9 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+.env.dev
+.env.prod
+.env.stage
 .env.local
 .env.development
 .env.production

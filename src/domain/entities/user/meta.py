@@ -1,35 +1,31 @@
-from __future__ import annotations
-
+import re
 import secrets
+import uuid
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
 
-from domain.interfaces import UserMetaEntityInterface
-from .exceptions import (
-    UserMetaInvalidAvatarPathError,
-    UserMetaInvalidNameError,
-    UserMetaInvalidTimeBlockError
-)
 from ..mixins import UpdateEntityParamMixin
-
-if TYPE_CHECKING:
-    from domain.interfaces.user.types import (
-        UserMetaNameType,
-        UserMetaAvatarPathType,
-        UserMetaTimeBlockType,
-        UserMetaSaltType,
-        UserMetaUpdNameType,
-        UserMetaUpdAvatarPathType,
-        UserMetaUpdTimeBlockType
-    )
-    from .dto import UserMetaDTO
+from .exceptions import (
+    UserMetaInvalidAvatarKeyError,
+    UserMetaInvalidNameError,
+    UserMetaInvalidTimeBlockError,
+)
+from .types import (
+    UserMetaAvatarIsThereType,
+    UserMetaAvatarKeyType,
+    UserMetaIDType,
+    UserMetaNameType,
+    UserMetaSaltType,
+    UserMetaTimeBlockType,
+    UserMetaUpdNameType,
+    UserMetaUpdTimeBlockType,
+)
 
 
 @dataclass(slots=True)
-class UserMeta(UpdateEntityParamMixin, UserMetaEntityInterface):
+class UserMeta(UpdateEntityParamMixin):
     """Метаданные пользователя."""
     _name: UserMetaNameType
-    _avatar_path: UserMetaAvatarPathType
+    _avatar_key: UserMetaAvatarKeyType
     _time_block: UserMetaTimeBlockType
 
     __salt: UserMetaSaltType = field(
@@ -37,9 +33,12 @@ class UserMeta(UpdateEntityParamMixin, UserMetaEntityInterface):
         init=True,
         repr=False
     )
+    __user_id: UserMetaIDType = field(default=None, init=False)
 
-    # Поддерживаемые расширения аватарок пользователя.
-    __ICON_EXTS = {'.png', '.jpg', '.jpeg', '.webp'}
+    __AVATAR_PREFIX = "users/avatars/"
+    __AVATAR_DEFAULT_NAME = "default"
+    __AVATAR_EXT = "webp"
+    __AVATAR_KEY_PATTERN = re.compile(rf"^{__AVATAR_PREFIX}[^/]+\.{__AVATAR_EXT}$")
 
     @property
     def salt(self) -> UserMetaSaltType:
@@ -47,10 +46,17 @@ class UserMeta(UpdateEntityParamMixin, UserMetaEntityInterface):
         Соль хеширования пароля пользователя.
 
         Только для чтения.
-
-        :rtype: UserMetaSaltType
         """
         return self.__salt
+
+    @property
+    def user_id(self) -> UserMetaIDType:
+        """
+        ID пользователя.
+
+        Только для чтения.
+        """
+        return self.__user_id
 
     @property
     def name(self) -> UserMetaNameType:
@@ -59,8 +65,6 @@ class UserMeta(UpdateEntityParamMixin, UserMetaEntityInterface):
 
         Запись произойдет только в случае если новое имя пользователя
         не является None и будет корректным.
-
-        :rtype: UserMetaNameType
         """
         return self._name
 
@@ -69,24 +73,21 @@ class UserMeta(UpdateEntityParamMixin, UserMetaEntityInterface):
         self._update_field('_name', value, self.__check_empty_name)
 
     @property
-    def avatar_path(self) -> UserMetaAvatarPathType:
+    def avatar_key(self) -> UserMetaAvatarKeyType:
         """
-        Путь к аватарке пользователя.
+        Ключ аватарки пользователя.
 
-        Запись произойдет только в случае если новый путь к аватарке
-        пользователя не является None и будет корректным.
-
-        :rtype: UserMetaAvatarPathType
+        Запись произойдет только в случае если новый ключ аватарки
+        пользователя будет корректным.
         """
-        return self._avatar_path
+        return self._avatar_key
 
-    @avatar_path.setter
-    def avatar_path(self, value: UserMetaUpdAvatarPathType) -> None:
-        self._update_field(
-            '_avatar_path',
-            value,
-            self.__check_incorrect_avatar_path
-        )
+    @avatar_key.setter
+    def avatar_key(self, value: UserMetaAvatarKeyType) -> None:
+        if value is None:
+            self._avatar_key = value
+        else:
+            self._update_field('_avatar_key', value, self.__check_incorrect_avatar_key)
 
     @property
     def time_block(self) -> UserMetaTimeBlockType:
@@ -95,41 +96,32 @@ class UserMeta(UpdateEntityParamMixin, UserMetaEntityInterface):
 
         Запись произойдет только в случае если новое время блокировки
         сессии пользователя не является None и будет корректным.
-
-        :rtype: UserMetaTimeBlockType
         """
         return self._time_block
 
     @time_block.setter
     def time_block(self, value: UserMetaUpdTimeBlockType) -> None:
-        self._update_field(
-            '_time_block',
-            value,
-            self.__check_negative_time_block
-        )
-
-    def to_dict(self) -> UserMetaDTO:
-        """
-        Преобразование в словарь.
-
-        Путь к аватарке пользователя преобразуется в строку.
-
-        :return: Словарь с метаданными пользователя.
-        :rtype: UserMetaDTO
-        """
-        return {
-            'name': self._name,
-            'avatar_path': str(self._avatar_path),
-            'time_block': self._time_block
-        }
+        self._update_field('_time_block', value, self.__check_negative_time_block)
 
     @classmethod
-    def __check_incorrect_avatar_path(
-            cls,
-            avatar_path: UserMetaAvatarPathType
-    ) -> None:
-        if avatar_path.suffix.lower() not in cls.__ICON_EXTS:
-            raise UserMetaInvalidAvatarPathError(avatar_path)
+    def get_default_avatar_key(cls) -> UserMetaAvatarIsThereType:
+        return f"{cls.__AVATAR_PREFIX}{cls.__AVATAR_DEFAULT_NAME}.{cls.__AVATAR_EXT}"
+
+    @staticmethod
+    def generate_uuid_from_salt(salt: bytes) -> uuid.UUID:
+        """Генерация UUID по соли."""
+        return uuid.uuid5(uuid.NAMESPACE_OID, name=salt.hex())
+
+    def _generate_user_id(self) -> None:
+        """Генерация ID пользователя."""
+        self.__user_id = self.generate_uuid_from_salt(self.__salt)
+
+    @classmethod
+    def __check_incorrect_avatar_key(cls, avatar_key: UserMetaAvatarKeyType) -> None:
+        if (avatar_key is not None) and (
+                not cls.__AVATAR_KEY_PATTERN.fullmatch(avatar_key)
+        ):
+            raise UserMetaInvalidAvatarKeyError(avatar_key)
 
     @staticmethod
     def __check_empty_name(name: UserMetaNameType) -> None:
@@ -143,10 +135,11 @@ class UserMeta(UpdateEntityParamMixin, UserMetaEntityInterface):
 
     def __post_init__(self) -> None:
         """
-        Обработка после инициализации метаданных пользователя.
-
-        Проверка на корректность метаданных пользователя.
+        Проверка имени, ключа аватарки и времени блокировки сессии на
+        корректность, после чего генерируется ID.
         """
         self.__check_empty_name(self._name)
-        self.__check_incorrect_avatar_path(self._avatar_path)
+        self.__check_incorrect_avatar_key(self._avatar_key)
         self.__check_negative_time_block(self._time_block)
+
+        self._generate_user_id()

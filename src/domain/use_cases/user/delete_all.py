@@ -1,28 +1,25 @@
-from __future__ import annotations
+import structlog
 
-from typing import TYPE_CHECKING
+from domain.interfaces.user import UserUnitOfWork
 
-from domain.entities import User
-from domain.interfaces import DeleteAllUsersUseCaseInterface
+from .types import UsersCountType
 
-if TYPE_CHECKING:
-    from domain.interfaces import UserUnitOfWorkInterface
+logger = structlog.getLogger(__name__)
 
 
-class DeleteAllUsers(DeleteAllUsersUseCaseInterface):
+class DeleteAllUsers:
     """Удаление всех пользователей."""
 
-    def __init__(self, uow: UserUnitOfWorkInterface[User]):
-        """
-        Инициализация получения карточки пользователя.
-
-        :param uow: Менеджер управления транзакцией пользователя.
-        :type uow: UserUnitOfWorkInterface
-        """
+    def __init__(self, uow: UserUnitOfWork) -> None:
         self.__uow = uow
 
-    def execute(self) -> None:
-        """Удаление всех пользователей."""
+    def __call__(self) -> UsersCountType:
+        """Удаление из хранилища пользователей."""
         with self.__uow:
-            self.__uow.user_repos.del_all_items()
+            users_count = self.__uow.user_repos.del_all()
+
             self.__uow.commit()
+
+            logger.info("all_users_deleted", users_count=users_count)
+
+            return users_count

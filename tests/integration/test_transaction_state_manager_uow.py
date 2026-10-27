@@ -6,11 +6,11 @@ from typing import TYPE_CHECKING, TypedDict
 
 import pytest
 
-from infrastructure.persistence.uow.exceptions import (
+from infrastructure.database.uow.exceptions import (
     SessionNotInitializedError
 )
-from infrastructure.persistence.models import CardORM, UserORM
-from infrastructure.persistence.uow import TransactionManager
+from infrastructure.database.models import CardORM, UserORM
+from infrastructure.database.uow import TransactionManager
 from domain.entities import Card, CardMeta, User, UserMeta
 
 if TYPE_CHECKING:

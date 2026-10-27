@@ -1,32 +1,12 @@
-from __future__ import annotations
-
-from typing import TYPE_CHECKING, override
-
-from domain.interfaces import UserNotFoundErrorInterface
-
-if TYPE_CHECKING:
-    from domain.interfaces.user.types import UserLoginType, UserMessageType
+from domain.entities.user.types import UserMetaIDType
+from shared.errors import NotFoundError
 
 
-class UserNotFoundError(UserNotFoundErrorInterface):
-    """Ошибка при не найденном пользователе."""
+class UserNotFoundError(NotFoundError):
+    def __init__(self, user_id: UserMetaIDType) -> None:
+        self.__user_id = user_id
+        super().__init__(f"Пользователь не найден! -> {user_id=}")
 
-    def __init__(self, login: UserLoginType):
-        """
-        Инициализация ошибки.
-
-        :param login: Логин пользователя.
-        :type login: UserLoginType
-        """
-        self.__login = login
-
-    @override
     @property
-    def message(self) -> UserMessageType:
-        """
-        Сообщение об ошибке.
-
-        :return: Текст ошибки.
-        :rtype: UserMessageType
-        """
-        return f"Пользователь не найден! -> {self.__login}"
+    def user_id(self) -> UserMetaIDType:
+        return self.__user_id

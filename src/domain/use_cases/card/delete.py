@@ -1,45 +1,23 @@
-from __future__ import annotations
+import structlog
 
-from typing import TYPE_CHECKING
+from domain.interfaces.card import CardUnitOfWork
 
-from domain.entities import Card
-from domain.interfaces import DeleteCardUseCaseInterface
+from .commands import DeleteCardCommand
 
-if TYPE_CHECKING:
-    from domain.interfaces import CardUnitOfWorkInterface
-    from domain.interfaces.card.types import (
-        CardMetaUserLoginType,
-        CardMetaCardIDType
-    )
+logger = structlog.getLogger(__name__)
 
 
-class DeleteCard(DeleteCardUseCaseInterface):
+class DeleteCard:
     """Удаление карточки пользователя."""
 
-    def __init__(self, uow: CardUnitOfWorkInterface[Card]):
-        """
-        Инициализация получения карточки пользователя.
-
-        :param uow: Менеджер управления транзакцией карточки
-                    пользователя.
-        :type uow: CardUnitOfWorkInterface
-        """
+    def __init__(self, uow: CardUnitOfWork) -> None:
         self.__uow = uow
 
-    def execute(
-            self,
-            user_login: CardMetaUserLoginType,
-            card_id: CardMetaCardIDType
-    ) -> None:
-        """
-        Удаление карточки пользователя.
-
-        :param user_login: Логин пользователя.
-        :type user_login: CardMetaUserLoginType
-
-        :param card_id: ID карточки пользователя.
-        :type card_id: CardMetaCardIDType
-        """
+    def __call__(self, cmd: DeleteCardCommand) -> None:
+        """Удаление из хранилища по ID карточки пользователя."""
         with self.__uow:
-            self.__uow.card_repos.del_item(user_login, card_id)
+            self.__uow.card_repos.del_by_id(cmd.card_id)
+
             self.__uow.commit()
+
+            logger.info("card_deleted", card_id=cmd.card_id)

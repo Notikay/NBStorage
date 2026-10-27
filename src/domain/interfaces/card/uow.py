@@ -1,19 +1,10 @@
-from __future__ import annotations
+from typing import Protocol
 
-from abc import abstractmethod
-from typing import TYPE_CHECKING
+from domain.interfaces import UnitOfWork
 
-from base import AbstractUnitOfWork
-
-if TYPE_CHECKING:
-    from .entities import CardEntityInterface
-    from .repositories import CardRepositoryInterface
+from .repositories import CardRepository
 
 
-class CardUnitOfWorkInterface[T: CardEntityInterface](AbstractUnitOfWork):
-    """Интерфейс управления транзакцией карточки пользователя."""
-
+class CardUnitOfWork(UnitOfWork, Protocol):
     @property
-    @abstractmethod
-    def card_repos(self) -> CardRepositoryInterface[T]:
-        pass
+    def card_repos(self) -> CardRepository: ...

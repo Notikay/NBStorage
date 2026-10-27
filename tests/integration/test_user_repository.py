@@ -5,8 +5,8 @@ from typing import TYPE_CHECKING, TypedDict
 
 import pytest
 
-from infrastructure.persistence.models import UserORM
-from infrastructure.persistence.repositories import UserStorage
+from infrastructure.database.models import UserORM
+from infrastructure.database.repositories import UserStorage
 from domain.entities import UserMeta, User
 
 if TYPE_CHECKING:

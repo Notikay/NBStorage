@@ -1,25 +1,15 @@
-from __future__ import annotations
-
 from dataclasses import dataclass, field, fields
 from functools import partial
 from math import ceil
-from typing import TYPE_CHECKING, Self
+from typing import Self
 
-from domain.interfaces import CardEntityInterface
 from .exceptions import CardInvalidParamError
-
-if TYPE_CHECKING:
-    from domain.interfaces.card.types import (
-        CardParamType,
-        CardUpdParamType,
-        CardParamIsThereType
-    )
-    from .dto import CardDTO
-    from .meta import CardMeta
+from .meta import CardMeta
+from .types import CardParamIsThereType, CardParamType, CardUpdParamType
 
 
 @dataclass(slots=True)
-class Card(CardEntityInterface):
+class Card:
     """Карточка пользователя."""
     _meta: CardMeta
     _username: CardParamType
@@ -36,8 +26,6 @@ class Card(CardEntityInterface):
         Метаданные карточки пользователя.
 
         Только для чтения.
-
-        :rtype: CardMeta
         """
         return self._meta
 
@@ -47,8 +35,6 @@ class Card(CardEntityInterface):
         Флаг шифровки данных карточки пользователя.
 
         Только для чтения.
-
-        :rtype: bool
         """
         return self._is_encrypted
 
@@ -59,8 +45,6 @@ class Card(CardEntityInterface):
 
         Запись произойдет только в случае если новое имя пользователя в
         сервисе не является None и будет корректным.
-
-        :rtype: CardParamType
         """
         return self._username
 
@@ -75,8 +59,6 @@ class Card(CardEntityInterface):
 
         Запись произойдет только в случае если новая электронная почта,
         привязанная к сервису, не является None и будет корректным.
-
-        :rtype: CardParamType
         """
         return self._email
 
@@ -91,8 +73,6 @@ class Card(CardEntityInterface):
 
         Запись произойдет только в случае если новый пароль от сервиса
         не является None и будет корректным.
-
-        :rtype: CardParamType
         """
         return self._password
 
@@ -107,8 +87,6 @@ class Card(CardEntityInterface):
 
         Запись произойдет только в случае если новый URL-адрес сервиса
         не является None и будет корректным.
-
-        :rtype: CardParamType
         """
         return self._url
 
@@ -123,8 +101,6 @@ class Card(CardEntityInterface):
 
         Запись произойдет только в случае если новое описание сервиса
         не является None и будет корректным.
-
-        :rtype: CardParamType
         """
         return self._description
 
@@ -146,93 +122,30 @@ class Card(CardEntityInterface):
 
     def decrypt(self) -> None:
         """Расшифровка данных карточки пользователя."""
-        self.encrypt()  # toggle из-за метода шифровки (XOR OTP)
+        self.encrypt()  # toggle из-за метода шифровки (XOR OTP).
         self._is_encrypted = False
-
-    def to_dict(self) -> CardDTO:
-        """
-        Преобразование в словарь.
-
-        Проверка на шифрованные данные карточки пользователя, для
-        корректного преобразования в словарь.
-
-        :return: Словарь с данными карточки пользователя.
-        :rtype: CardDTO
-        """
-        if self._is_encrypted:
-            username = self._username.hex() \
-                if self._username is not None else None
-            email = self._email.hex() \
-                if self._email is not None else None
-            password = self._password.hex() \
-                if self._password is not None else None
-            url = self._url.hex() \
-                if self._url is not None else None
-            description = self._description.hex() \
-                if self._description is not None else None
-        else:
-            username = self._username.decode('utf-8') \
-                if self._username is not None else None
-            email = self._email.decode('utf-8') \
-                if self._email is not None else None
-            password = self._password.decode('utf-8') \
-                if self._password is not None else None
-            url = self._url.decode('utf-8') \
-                if self._url is not None else None
-            description = self._description.decode('utf-8') \
-                if self._description is not None else None
-
-        return {
-            'meta': self._meta.to_dict(),
-            'username': username,
-            'email': email,
-            'password': password,
-            'url': url,
-            'description': description
-        }
 
     @staticmethod
     def xor_otp_encrypt(param: bytes | None, key: bytes) -> CardParamType:
         """
-        Шифровка параметра методом XOR OTP.
+        Шифровка параметра с помощью ключа, методом XOR OTP.
 
-        Если параметр является None, то и результат шифровки этого
-        параметра будет None, несмотря на ключ.
-
-        :param param: Параметр, который нужно зашифровать.
-        :type param: bytes | None
-
-        :param key: Ключ шифровки.
-        :type key: bytes
-
-        :return: Зашифрованный параметр.
-        :rtype: CardParamType
+        Если параметр является None, то и результат шифровки будет None.
         """
         if param is None:
             return None
         if (key_mult := ceil(len(param) / len(key))) != 1:
             key *= key_mult
 
-        return bytes(p ^ k for p, k in zip(param, key))
+        return bytes(p ^ k for p, k in zip(param, key))  # noqa: B905
 
-    def _update_field(
-            self,
-            param_field_name: str,
-            value: CardUpdParamType
-    ) -> None:
+    def _update_field(self, param_field_name: str, value: CardUpdParamType) -> None:
         """
         Обновление параметра в карточке пользователя.
 
         Если параметр пуст, то он будет обновлен на None.
         Если данные карточки пользователя зашифрованы, то сначала будет
         их расшифровка, затем обновление параметра и снова шифровка.
-
-        :param param_field_name: Название параметра в карточке
-                                 пользователя.
-        :type param_field_name: str
-
-        :param value: Новое значение параметра в карточке пользователя.
-        :type value: CardUpdParamType
         """
         if value is not None:
             try:
@@ -241,10 +154,7 @@ class Card(CardEntityInterface):
                 setattr(self, param_field_name, None)
             else:
                 self.__check_param_equal_key(value, param_field_name)
-                self.__check_key_must_not_start_with_param(
-                    value,
-                    param_field_name
-                )
+                self.__check_key_must_not_start_with_param(value, param_field_name)
                 if self._is_encrypted:
                     self.decrypt()
                     setattr(self, param_field_name, value)
@@ -256,7 +166,7 @@ class Card(CardEntityInterface):
             self,
             param: CardParamIsThereType,
             param_field_name: str
-    ):
+    ) -> None:
         if param == self._meta.key:
             raise CardInvalidParamError(
                 param,
@@ -268,7 +178,7 @@ class Card(CardEntityInterface):
             self,
             param: CardParamIsThereType,
             param_field_name: str
-    ):
+    ) -> None:
         if self._meta.key.startswith(param):
             raise CardInvalidParamError(
                 param,
@@ -277,10 +187,7 @@ class Card(CardEntityInterface):
             )
 
     @staticmethod
-    def __check_empty_param(
-            param: CardParamIsThereType,
-            param_field_name: str
-    ):
+    def __check_empty_param(param: CardParamIsThereType, param_field_name: str) -> None:
         if not param.replace(b'\x00', b''):
             raise CardInvalidParamError(
                 param,
@@ -288,12 +195,10 @@ class Card(CardEntityInterface):
                 "Параметр не должен быть пустым!"
             )
 
-
     def __post_init__(self: Self) -> None:
         """
-        Обработка после инициализации карточки пользователя.
+        Проверка параметров на корректность.
 
-        Проверка на корректность данных карточки пользователя.
         Параметр с метаданными карточки пользователя (_metadata) и флаг
         шифровки данных карточки пользователя (_is_encrypted) не
         проверяются.
@@ -304,7 +209,4 @@ class Card(CardEntityInterface):
             if (param := getattr(self, param_field.name)) is not None:
                 self.__check_empty_param(param, param_field.name)
                 self.__check_param_equal_key(param, param_field.name)
-                self.__check_key_must_not_start_with_param(
-                    param,
-                    param_field.name
-                )
+                self.__check_key_must_not_start_with_param(param, param_field.name)

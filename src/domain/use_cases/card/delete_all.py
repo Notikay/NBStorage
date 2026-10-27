@@ -1,35 +1,30 @@
-from __future__ import annotations
+import structlog
 
-from typing import TYPE_CHECKING
+from domain.interfaces.card import CardUnitOfWork
 
-from domain.entities import Card
-from domain.interfaces import DeleteAllCardsUseCaseInterface
+from .commands import DeleteAllCardsCommand
+from .types import CardsCountType
 
-if TYPE_CHECKING:
-    from domain.interfaces import CardUnitOfWorkInterface
-    from domain.interfaces.card.types import CardMetaUserLoginType
+logger = structlog.getLogger(__name__)
 
 
-class DeleteAllCards(DeleteAllCardsUseCaseInterface):
+class DeleteAllCards:
     """Удаление всех карточек пользователя."""
 
-    def __init__(self, uow: CardUnitOfWorkInterface[Card]):
-        """
-        Инициализация получения карточки пользователя.
-
-        :param uow: Менеджер управления транзакцией карточки
-                    пользователя.
-        :type uow: CardUnitOfWorkInterface
-        """
+    def __init__(self, uow: CardUnitOfWork) -> None:
         self.__uow = uow
 
-    def execute(self, user_login: CardMetaUserLoginType) -> None:
-        """
-        Удаление всех карточек пользователя.
-
-        :param user_login: Логин пользователя.
-        :type user_login: CardMetaUserLoginType
-        """
+    def __call__(self, cmd: DeleteAllCardsCommand) -> CardsCountType:
+        """Удаление из хранилища по ID пользователя."""
         with self.__uow:
-            self.__uow.card_repos.del_all_items(user_login)
+            cards_count = self.__uow.card_repos.del_all_by_user_id(cmd.user_id)
+
             self.__uow.commit()
+
+            logger.info(
+                "all_cards_deleted",
+                user_id=cmd.user_id,
+                cards_count=cards_count
+            )
+
+            return cards_count

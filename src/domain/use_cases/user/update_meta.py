@@ -1,74 +1,39 @@
-from __future__ import annotations
+import structlog
 
-from typing import TYPE_CHECKING
+from domain.entities.user import User
+from domain.interfaces.user import UserUnitOfWork
 
-from domain.entities import User
-from domain.interfaces import UpdateUserMetaUseCaseInterface
+from .commands import UpdateUserMetaCommand
 from .exceptions import UserNotFoundError
 
-if TYPE_CHECKING:
-    from domain.interfaces import UserUnitOfWorkInterface
-    from domain.interfaces.user.types import (
-        UserLoginType,
-        UserMetaUpdNameType,
-        UserMetaUpdAvatarPathType,
-        UserMetaUpdTimeBlockType
-    )
+logger = structlog.getLogger(__name__)
 
 
-class UpdateUserMeta(UpdateUserMetaUseCaseInterface[User]):
-    """Обновление настроек пользователя."""
+class UpdateUserMeta:
+    """Обновление метаданных пользователя."""
 
-    def __init__(self, uow: UserUnitOfWorkInterface[User]):
-        """
-        Инициализация получения карточки пользователя.
-
-        :param uow: Менеджер управления транзакцией пользователя.
-        :type uow: UserUnitOfWorkInterface
-        """
+    def __init__(self, uow: UserUnitOfWork) -> None:
         self.__uow = uow
 
-    def execute(
-            self,
-            login: UserLoginType,
-            name: UserMetaUpdNameType,
-            avatar_path: UserMetaUpdAvatarPathType,
-            time_block: UserMetaUpdTimeBlockType
-    ) -> User:
+    def __call__(self, cmd: UpdateUserMetaCommand) -> User:
         """
-        Обновление настроек пользователя.
-
-        :param login: Логин пользователя.
-        :type login: UserLoginType
-
-        :param name: Имя пользователя.
-        :type name: UserMetaUpdNameType
-
-        :param avatar_path: Путь к аватарке пользователя.
-        :type avatar_path: UserMetaUpdAvatarPathType
-
-        :param time_block: Время блокировки сессии пользователя.
-        :type time_block: UserMetaUpdTimeBlockType
-
-        :return: Пользователь.
-        :rtype: User
+        Получение карточки пользователя, обновление метаданных и
+        сохранение в хранилище.
 
         :raises UserNotFoundError: Если пользователь не найден.
         """
         with self.__uow:
-            user = self.__uow.user_repos.get_item(login)
+            user: User | None = self.__uow.user_repos.get_by_id(cmd.user_id)
             if user is None:
-                raise UserNotFoundError(login)
+                raise UserNotFoundError(cmd.user_id)
 
-            # Mypy ругается на разные типы для property и setter
-            user.meta.name = name  # type: ignore
-            user.meta.avatar_path = avatar_path  # type: ignore
-            user.meta.time_block = time_block  # type: ignore
+            user.meta.name = cmd.name
+            user.meta.time_block = cmd.time_block
 
-            upd_user: User | None = self.__uow.user_repos.upd_item(user)
-            if upd_user is None:
-                raise UserNotFoundError(login)
+            upd_user = self.__uow.user_repos.save(user)
 
             self.__uow.commit()
+
+            logger.info("user_meta_updated", user_id=upd_user.meta.user_id)
 
             return upd_user

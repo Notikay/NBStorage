@@ -1,76 +1,33 @@
-from __future__ import annotations
+import structlog
 
-from typing import TYPE_CHECKING
+from domain.entities.user import User, UserMeta
+from domain.interfaces.user import UserUnitOfWork
 
-from domain.entities import User, UserMeta
-from domain.interfaces import CreateUserUseCaseInterface
+from .commands import CreateUserCommand
 
-if TYPE_CHECKING:
-    from domain.interfaces import UserUnitOfWorkInterface
-    from domain.interfaces.user.types import (
-        UserLoginType,
-        UserPasswordType,
-        UserMetaNameType,
-        UserMetaAvatarPathType,
-        UserMetaTimeBlockType
-    )
+logger = structlog.getLogger(__name__)
 
 
-class CreateUser(CreateUserUseCaseInterface[User]):
+class CreateUser:
     """Создание пользователя."""
 
-    def __init__(self, uow: UserUnitOfWorkInterface[User]):
-        """
-        Инициализация получения карточки пользователя.
-
-        :param uow: Менеджер управления транзакцией пользователя.
-        :type uow: UserUnitOfWorkInterface
-        """
+    def __init__(self, uow: UserUnitOfWork) -> None:
         self.__uow = uow
 
-    def execute(
-            self,
-            login: UserLoginType,
-            password: UserPasswordType,
-            name: UserMetaNameType,
-            avatar_path: UserMetaAvatarPathType,
-            time_block: UserMetaTimeBlockType
-    ) -> User:
-        """
-        Создание пользователя.
-
-        Формирование пользователя.
-        Хеширование пароля пользователя.
-        Сохранение пользователя в хранилище.
-
-        :param login: Логин пользователя.
-        :type login: UserLoginType
-
-        :param password: Пароль пользователя.
-        :type password: UserPasswordType
-
-        :param name: Имя пользователя.
-        :type name: UserMetaNameType
-
-        :param avatar_path: Путь к аватарке пользователя.
-        :type avatar_path: UserMetaAvatarPathType
-
-        :param time_block: Время блокировки сессии пользователя.
-        :type time_block: UserMetaTimeBlockType
-
-        :return: Пользователь.
-        :rtype: User
-        """
+    def __call__(self, cmd: CreateUserCommand) -> User:
+        """Формирование пользователя и сохранение в хранилище."""
         with self.__uow:
             user = User(
-                UserMeta(name, avatar_path, time_block),
-                login,
-                password
+                UserMeta(cmd.name, None, cmd.time_block),
+                cmd.login,
+                cmd.password
             )
             user.hash_password()
 
-            user = self.__uow.user_repos.set_item(user)
+            user = self.__uow.user_repos.save(user)
 
             self.__uow.commit()
+
+            logger.info("user_created", user_id=user.meta.user_id)
 
             return user

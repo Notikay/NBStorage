@@ -6,7 +6,7 @@ import pytest
 from sqlalchemy.engine import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from infrastructure.persistence.models.base import Base
+from infrastructure.database.models.base import Base
 
 if TYPE_CHECKING:
     from _pytest.fixtures import FixtureRequest

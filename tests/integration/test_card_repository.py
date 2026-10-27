@@ -6,8 +6,8 @@ from typing import TYPE_CHECKING, TypedDict
 
 import pytest
 
-from infrastructure.persistence.models import CardORM
-from infrastructure.persistence.repositories import CardStorage
+from infrastructure.database.models import CardORM
+from infrastructure.database.repositories import CardStorage
 from domain.entities import Card, CardMeta
 
 if TYPE_CHECKING:

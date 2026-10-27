@@ -1,19 +1,9 @@
-from __future__ import annotations
+from typing import Protocol
 
-from abc import abstractmethod
-from typing import TYPE_CHECKING
-
-from base import AbstractUnitOfWork
-
-if TYPE_CHECKING:
-    from .entities import UserEntityInterface
-    from .repositories import UserRepositoryInterface
+from ..units_of_work import UnitOfWork
+from .repositories import UserRepository
 
 
-class UserUnitOfWorkInterface[T: UserEntityInterface](AbstractUnitOfWork):
-    """Интерфейс управления транзакцией пользователя."""
-
+class UserUnitOfWork(UnitOfWork, Protocol):
     @property
-    @abstractmethod
-    def user_repos(self) -> UserRepositoryInterface[T]:
-        pass
+    def user_repos(self) -> UserRepository: ...

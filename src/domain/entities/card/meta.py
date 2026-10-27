@@ -1,58 +1,48 @@
-from __future__ import annotations
-
+import re
 import secrets
 import uuid
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
 
-from domain.interfaces import CardMetaEntityInterface
-from .exceptions import (
-    CardMetaInvalidIconPathError,
-    CardMetaInvalidTitleError,
-    CardMetaInvalidUserLoginError
-)
 from ..mixins import UpdateEntityParamMixin
-
-if TYPE_CHECKING:
-    from domain.interfaces.card.types import (
-        CardMetaTitleType,
-        CardMetaIconPathType,
-        CardMetaUserLoginType,
-        CardMetaKeyType,
-        CardMetaCardIDType,
-        CardMetaUpdTitleType,
-        CardMetaUpdIconPathType
-    )
-    from .dto import CardMetaDTO
+from .exceptions import CardMetaInvalidIconKeyError, CardMetaInvalidTitleError
+from .types import (
+    CardMetaIDType,
+    CardMetaIconIsThereType,
+    CardMetaIconKeyType,
+    CardMetaKeyType,
+    CardMetaTitleType,
+    CardMetaUpdTitleType,
+    CardMetaUserIDType,
+)
 
 
 @dataclass(slots=True)
-class CardMeta(UpdateEntityParamMixin, CardMetaEntityInterface):
+class CardMeta(UpdateEntityParamMixin):
     """Метаданные карточки пользователя."""
     _title: CardMetaTitleType
-    _icon_path: CardMetaIconPathType
-    _user_login: CardMetaUserLoginType
+    _icon_key: CardMetaIconKeyType
+    _user_id: CardMetaUserIDType
 
     __key: CardMetaKeyType = field(
-        default_factory=lambda: secrets.token_bytes(32),
+        default_factory=secrets.token_bytes,
         init=True,
         repr=False
     )
-    __card_id: CardMetaCardIDType = field(init=False)
+    __card_id: CardMetaIDType = field(default=None, init=False)
 
-    # Поддерживаемые расширения иконок карточки пользователя.
-    __ICON_EXTS = {'.png', '.jpg', '.jpeg', '.webp', '.svg', '.ico', '.icon'}
+    __ICON_PREFIX = "cards/icons/"
+    __ICON_DEFAULT_NAME = "default"
+    __ICON_EXT = "webp"
+    __ICON_KEY_PATTERN = re.compile(rf"^{__ICON_PREFIX}[^/]+\.{__ICON_EXT}$")
 
     @property
-    def user_login(self) -> CardMetaUserLoginType:
+    def user_id(self) -> CardMetaUserIDType:
         """
-        Логина пользователя, которому принадлежит карточка.
+        ID пользователя, которому принадлежит карточка.
 
         Только для чтения.
-
-        :rtype: CardMetaUserLoginType
         """
-        return self._user_login
+        return self._user_id
 
     @property
     def key(self) -> CardMetaKeyType:
@@ -60,19 +50,15 @@ class CardMeta(UpdateEntityParamMixin, CardMetaEntityInterface):
         Ключ шифрования данных карточки пользователя.
 
         Только для чтения.
-
-        :rtype: CardMetaKeyType
         """
         return self.__key
 
     @property
-    def card_id(self) -> CardMetaCardIDType:
+    def card_id(self) -> CardMetaIDType:
         """
         ID карточки пользователя.
 
         Только для чтения.
-
-        :rtype: CardMetaCardIDType
         """
         return self.__card_id
 
@@ -83,8 +69,6 @@ class CardMeta(UpdateEntityParamMixin, CardMetaEntityInterface):
 
         Запись произойдет только в случае если новое название карточки
         не является None и будет корректным.
-
-        :rtype: CardMetaTitleType
         """
         return self._title
 
@@ -93,91 +77,54 @@ class CardMeta(UpdateEntityParamMixin, CardMetaEntityInterface):
         self._update_field('_title', value, self.__check_empty_title)
 
     @property
-    def icon_path(self) -> CardMetaIconPathType:
+    def icon_key(self) -> CardMetaIconKeyType:
         """
-        Путь к иконке карточки пользователя.
+        Ключ иконки карточки пользователя.
 
-        Запись произойдет только в случае если новый путь к иконке
-        карточки пользователя не является None и будет корректным.
-
-        :rtype: CardMetaIconPathType
+        Запись произойдет только в случае если новый ключ иконки
+        карточки пользователя будет корректным.
         """
-        return self._icon_path
+        return self._icon_key
 
-    @icon_path.setter
-    def icon_path(self, value: CardMetaUpdIconPathType) -> None:
-        self._update_field(
-            '_icon_path',
-            value,
-            self.__check_incorrect_icon_path
-        )
+    @icon_key.setter
+    def icon_key(self, value: CardMetaIconKeyType) -> None:
+        if value is None:
+            self._icon_key = value
+        else:
+            self._update_field('_icon_key', value, self.__check_incorrect_icon_key)
 
-    def generate_card_id(self) -> None:
+    @classmethod
+    def get_default_icon_key(cls) -> CardMetaIconIsThereType:
+        return f"{cls.__ICON_PREFIX}{cls.__ICON_DEFAULT_NAME}.{cls.__ICON_EXT}"
+
+    @staticmethod
+    def generate_uuid_from_string_and_key(string: str, key: bytes) -> uuid.UUID:
+        """Генерация UUID по произвольной строке и ключу шифрования."""
+        return uuid.uuid5(uuid.NAMESPACE_OID, name=f"{string}-{key.hex()}")
+
+    def _generate_card_id(self) -> None:
         """Генерация ID карточки пользователя."""
-        self.__card_id = self.generate_uuid_from_login_and_key(
-            self._user_login,
+        self.__card_id = self.generate_uuid_from_string_and_key(
+            self._user_id.hex,
             self.__key
         )
 
-    def to_dict(self) -> CardMetaDTO:
-        """
-        Преобразование в словарь.
-
-        Путь к иконке и ID карточки пользователя преобразуются в строки.
-
-        :return: Словарь с метаданными карточки пользователя.
-        :rtype: CardMetaDTO
-        """
-        return {
-            'title': self._title,
-            'icon_path': str(self._icon_path),
-            'user_login': self._user_login,
-            'card_id': str(self.__card_id)
-        }
-
-    @staticmethod
-    def generate_uuid_from_login_and_key(login: str, key: bytes) -> uuid.UUID:
-        """
-        Генерация UUID по логину и ключу шифрования.
-
-        :param login: Логин.
-        :type login: str
-
-        :param key: Ключ шифрования.
-        :type key: bytes
-
-        :return: UUID.
-        :rtype: uuid.UUID
-        """
-        return uuid.uuid5(uuid.NAMESPACE_OID, name=f"{login}-{key.hex()}")
-
     @classmethod
-    def __check_incorrect_icon_path(
-            cls,
-            icon_path: CardMetaIconPathType
-    ) -> None:
-        if icon_path.suffix.lower() not in cls.__ICON_EXTS:
-            raise CardMetaInvalidIconPathError(icon_path)
+    def __check_incorrect_icon_key(cls, icon_key: CardMetaIconKeyType) -> None:
+        if (icon_key is not None) and (not cls.__ICON_KEY_PATTERN.fullmatch(icon_key)):
+            raise CardMetaInvalidIconKeyError(icon_key)
 
     @staticmethod
     def __check_empty_title(title: CardMetaTitleType) -> None:
         if not title:
             raise CardMetaInvalidTitleError(title)
 
-    @staticmethod
-    def __check_empty_user_login(user_login: CardMetaUserLoginType) -> None:
-        if not user_login:
-            raise CardMetaInvalidUserLoginError(user_login)
-
     def __post_init__(self) -> None:
         """
-        Обработка после инициализации метаданных карточки пользователя.
-
-        Проверка на корректность метаданных карточки пользователя.
-        Генерация ID карточки пользователя.
+        Проверка названия и ключа иконки на корректность, после чего
+        генерируется ID.
         """
         self.__check_empty_title(self._title)
-        self.__check_incorrect_icon_path(self._icon_path)
-        self.__check_empty_user_login(self._user_login)
+        self.__check_incorrect_icon_key(self._icon_key)
 
-        self.generate_card_id()
+        self._generate_card_id()

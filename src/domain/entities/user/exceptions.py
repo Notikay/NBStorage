@@ -1,142 +1,61 @@
-from __future__ import annotations
+from shared.errors import ValidationError
 
-from typing import TYPE_CHECKING, override
-
-from domain.interfaces import UserInvalidErrorInterface
-
-if TYPE_CHECKING:
-    from domain.interfaces.user.types import (
-        UserMetaNameType,
-        UserMessageType,
-        UserMetaAvatarPathType,
-        UserMetaTimeBlockType,
-        UserLoginType,
-        UserPasswordType
-    )
+from .types import (
+    UserLoginType,
+    UserMetaAvatarKeyType,
+    UserMetaNameType,
+    UserMetaTimeBlockType,
+    UserPasswordType,
+)
 
 
-class UserMetaInvalidNameError(UserInvalidErrorInterface):
-    """Ошибка метаданных пользователя, при некорректном имени."""
-
-    def __init__(self, name: UserMetaNameType):
-        """
-        Инициализация ошибки.
-
-        :param name: Название карточки пользователя.
-        :type name: UserMetaNameType
-        """
+class UserMetaInvalidNameError(ValidationError):
+    def __init__(self, name: UserMetaNameType) -> None:
         self.__name = name
+        super().__init__(f"Некорректное имя пользователя! -> {name=}")
 
-    @override
     @property
-    def message(self) -> UserMessageType:
-        """
-        Сообщение об ошибке.
-
-        :return: Текст ошибки.
-        :rtype: UserMessageType
-        """
-        return f"Некорректное имя пользователя! -> {self.__name}"
+    def name(self) -> UserMetaNameType:
+        return self.__name
 
 
-class UserMetaInvalidAvatarPathError(UserInvalidErrorInterface):
-    """
-    Ошибка метаданных пользователя, при некорректном пути к аватарке.
-    """
+class UserMetaInvalidAvatarKeyError(ValidationError):
+    def __init__(self, avatar_key: UserMetaAvatarKeyType) -> None:
+        self.__avatar_key = avatar_key
+        super().__init__(f"Некорректный ключ аватарки пользователя! -> {avatar_key=}")
 
-    def __init__(self, avatar_path: UserMetaAvatarPathType):
-        """
-        Инициализация ошибки.
-
-        :param avatar_path: Путь к аватарке пользователя.
-        :type avatar_path: UserMetaAvatarPathType
-        """
-        self.__avatar_path = avatar_path
-
-    @override
     @property
-    def message(self) -> UserMessageType:
-        """
-        Сообщение об ошибке.
-
-        :return: Текст ошибки.
-        :rtype: UserMessageType
-        """
-        return ("Некорректный путь к аватарке пользователя! -> "
-                f"{self.__avatar_path}")
+    def avatar_key(self) -> UserMetaAvatarKeyType:
+        return self.__avatar_key
 
 
-class UserMetaInvalidTimeBlockError(UserInvalidErrorInterface):
-    """
-    Ошибка метаданных пользователя, при некорректном времени блокировки
-    сессии.
-    """
-
-    def __init__(self, time_block: UserMetaTimeBlockType):
-        """
-        Инициализация ошибки.
-
-        :param time_block: Время блокировки сессии пользователя.
-        :type time_block: UserMetaTimeBlockType
-        """
+class UserMetaInvalidTimeBlockError(ValidationError):
+    def __init__(self, time_block: UserMetaTimeBlockType) -> None:
         self.__time_block = time_block
+        super().__init__(
+            f"Некорректное время блокировки сессии пользователя! -> {time_block=}"
+        )
 
-    @override
     @property
-    def message(self) -> UserMessageType:
-        """
-        Сообщение об ошибке.
-
-        :return: Текст ошибки.
-        :rtype: UserMessageType
-        """
-        return ("Некорректное время блокировки сессии пользователя! -> "
-                f"{self.__time_block}")
+    def time_block(self) -> UserMetaTimeBlockType:
+        return self.__time_block
 
 
-class UserInvalidLoginError(UserInvalidErrorInterface):
-    """Ошибка пользователя, при некорректном логине."""
-
-    def __init__(self, login: UserLoginType):
-        """
-        Инициализация ошибки.
-
-        :param login: Логин пользователя.
-        :type login: UserLoginType
-        """
+class UserInvalidLoginError(ValidationError):
+    def __init__(self, login: UserLoginType) -> None:
         self.__login = login
+        super().__init__(f"Некорректный логин пользователя! -> {login=}")
 
-    @override
     @property
-    def message(self) -> UserMessageType:
-        """
-        Сообщение об ошибке.
-
-        :return: Текст ошибки.
-        :rtype: UserMessageType
-        """
-        return f"Некорректный логин пользователя! -> {self.__login}"
+    def login(self) -> UserLoginType:
+        return self.__login
 
 
-class UserInvalidPasswordError(UserInvalidErrorInterface):
-    """Ошибка пользователя, при некорректном пароле."""
-
-    def __init__(self, password: UserPasswordType):
-        """
-        Инициализация ошибки.
-
-        :param password: Пароль пользователя.
-        :type password: UserPasswordType
-        """
+class UserInvalidPasswordError(ValidationError):
+    def __init__(self, password: UserPasswordType) -> None:
         self.__password = password
+        super().__init__(f"Некорректный пароль пользователя! -> {password=!r}")
 
-    @override
     @property
-    def message(self) -> UserMessageType:
-        """
-        Сообщение об ошибке.
-
-        :return: Текст ошибки.
-        :rtype: UserMessageType
-        """
-        return f"Некорректный пароль пользователя! -> {self.__password!r}"
+    def password(self) -> UserPasswordType:
+        return self.__password

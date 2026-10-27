@@ -1,0 +1,40 @@
+services:
+  nbstorage:
+    image: nbstorage-dev
+    container_name: nbstorage-dev
+
+    restart: no
+
+    command:
+      [
+        "uvicorn",
+        "infrastructure.presentation.api.fastapi.app:create_app",
+        "--reload",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000",
+        "--app-dir",
+        "./src"
+      ]
+
+    ports:
+      - "8000:8000"
+
+    volumes:
+      - ./src:/app/src
+      - ./migrations:/app/migrations
+      - ./alembic.ini:/app/alembic.ini
+
+  db:
+    restart: no
+
+    ports:
+      - "5432:5432"
+
+  store:
+    restart: no
+
+    ports:
+      - "9000:9000"
+      - "9001:9001"
